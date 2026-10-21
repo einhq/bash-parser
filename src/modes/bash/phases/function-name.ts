@@ -6,7 +6,7 @@ import map from '../../../utils/iterable/map.ts';
 
 const functionName: LexerPhase = () => {
   return compose<TokenIf>(
-    map(async (tk: TokenIf, _idx, iterable) => {
+    map((tk: TokenIf, _idx, iterable) => {
       const it = iterable as LookaheadIterable<TokenIf>;
 
       // `function name`: whatever word follows the keyword is the name

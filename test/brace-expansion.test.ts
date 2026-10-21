@@ -24,14 +24,14 @@ Deno.test('brace expansion', async (t) => {
     }
   });
 
-  await t.step('the parser makes words of it, expansions moved with their text', async () => {
-    const command = (await bashParser('echo ${x}{1,2} {$y,z}')).commands[0] as any;
+  await t.step('the parser makes words of it, expansions moved with their text', () => {
+    const command = (bashParser('echo ${x}{1,2} {$y,z}')).commands[0] as any;
     assertEquals(command.suffix.map((word: any) => word.text), ['${x}1', '${x}2', '$y', 'z']);
     assertEquals(command.suffix.map((word: any) => word.expansion?.[0]?.loc), [{ start: 0, end: 3 }, { start: 0, end: 3 }, { start: 0, end: 1 }, undefined]);
   });
 
-  await t.step('not in an assignment, but in an array literal; not in a pattern', async () => {
-    const script = (await bashParser('y={a,b}; a=({1..2}); case x in {a,b}) ;; esac')) as any;
+  await t.step('not in an assignment, but in an array literal; not in a pattern', () => {
+    const script = (bashParser('y={a,b}; a=({1..2}); case x in {a,b}) ;; esac')) as any;
     assertEquals(script.commands[0].prefix[0].text, 'y={a,b}');
     assertEquals(script.commands[1].prefix[0].text.split('﷑'), ['a=(1', '2)']);
     assertEquals(script.commands[2].cases[0].pattern[0].text, '{a,b}');

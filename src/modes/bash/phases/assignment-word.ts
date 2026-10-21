@@ -6,7 +6,7 @@ import map from '../../../utils/iterable/map.ts';
 const assignmentWord: LexerPhase = () => {
   let commandPrefixNotAllowed = false;
 
-  return map(async (tk: TokenIf) => {
+  return map((tk: TokenIf) => {
     // apply only on valid positions
     // (start of simple commands)
     if (tk.ctx.maybeStartOfSimpleCommand) {

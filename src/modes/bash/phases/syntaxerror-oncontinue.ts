@@ -17,7 +17,7 @@ const CLOSERS: Record<string, string> = {
 };
 
 const syntaxerrorOnContinue: LexerPhase = () => {
-  return map(async (tk: TokenIf) => {
+  return map((tk: TokenIf) => {
     if (tk && tk.is('CONTINUE')) {
       const error = new BashSyntaxError('Unclosed ' + tk.value, undefined, {
         start: {

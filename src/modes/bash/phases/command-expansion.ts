@@ -43,7 +43,7 @@ const shiftHereDocuments = (node: unknown, by: number): void => {
   for (const value of Object.values(node)) shiftHereDocuments(value, by);
 };
 
-const setCommandExpansion = async (xp: Expansion, token: TokenIf, options: Options) => {
+const setCommandExpansion = (xp: Expansion, token: TokenIf, options: Options) => {
   // `$()` closes before a character of it arrives: an empty command
   let command = xp.command ?? '';
 
@@ -55,7 +55,7 @@ const setCommandExpansion = async (xp: Expansion, token: TokenIf, options: Optio
 
   try {
     // bash parses a substitution as it reads it, so an alias expands in it as it would outside
-    commandAST = await bashParser(command, {
+    commandAST = bashParser(command, {
       unterminatedHereDocuments: options.unterminatedHereDocuments,
       resolveAlias: options.resolveAlias,
       posix: options.posix,
@@ -79,22 +79,20 @@ const setCommandExpansion = async (xp: Expansion, token: TokenIf, options: Optio
 // Expansion) from their introductory unquoted character sequences: '$' or "${", "$("
 // or '`', and "$((", respectively.
 const commandExpansion: LexerPhase = (ctx) =>
-  map(async (token: TokenIf) => {
+  map((token: TokenIf) => {
     if (token.is('WORD') || token.is('ASSIGNMENT_WORD')) {
       if (!token.expansion || token.expansion.length === 0) {
         return token;
       }
 
       return token.setExpansion(
-        await Promise.all(
-          token.expansion.map(async (xp: Expansion) => {
-            if (xp.type === 'CommandExpansion' || xp.type === 'ProcessSubstitution') {
-              return await setCommandExpansion(xp, token, ctx.resolvers);
-            }
+        token.expansion.map((xp: Expansion) => {
+          if (xp.type === 'CommandExpansion' || xp.type === 'ProcessSubstitution') {
+            return setCommandExpansion(xp, token, ctx.resolvers);
+          }
 
-            return xp;
-          }),
-        ),
+          return xp;
+        }),
       );
     }
     return token;

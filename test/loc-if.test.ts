@@ -2,7 +2,7 @@ import bashParser from '../src/parse.ts';
 import utils from './_utils.ts';
 
 Deno.test('loc-if', async (t) => {
-  await t.step('parse if elif else', async () => {
+  await t.step('parse if elif else', () => {
     const cmd = `if true; then
  echo 1;
 elif false; then
@@ -11,7 +11,7 @@ else
  echo 2;
 fi
 `;
-    const result = await bashParser(cmd, { insertLOC: true });
+    const result = bashParser(cmd, { insertLOC: true });
 
     const expected = {
       type: 'If',

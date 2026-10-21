@@ -6,7 +6,7 @@ import map from '../../../utils/iterable/map.ts';
 import filterNonNull from '../../../utils/non-null.ts';
 
 const ReplaceWithLineBreakIn: Visitor = {
-  async NEWLINE_LIST(tk: TokenIf, iterable?: AsyncIterable<TokenIf>) {
+  NEWLINE_LIST(tk: TokenIf, iterable?: Iterable<TokenIf>) {
     const it = iterable as LookaheadIterable<TokenIf>;
     const nextToken = it.ahead(1) || mkToken('EMPTY');
 
@@ -17,7 +17,7 @@ const ReplaceWithLineBreakIn: Visitor = {
     return tk;
   },
 
-  async In(tk: TokenIf, iterable?: AsyncIterable<TokenIf>) {
+  In(tk: TokenIf, iterable?: Iterable<TokenIf>) {
     const it = iterable as LookaheadIterable<TokenIf>;
     const lastToken = it.behind(1) || mkToken('EMPTY');
 

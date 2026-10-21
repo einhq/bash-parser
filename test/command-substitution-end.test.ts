@@ -26,8 +26,8 @@ Deno.test('where a command substitution ends', async (t) => {
     assertEquals(substitutionEnd('echo "a)'), -1);
   });
 
-  await t.step('the parser takes the whole command', async () => {
-    const result = await bashParser('x=$(case $y in a) echo A;; *) echo B;; esac)');
+  await t.step('the parser takes the whole command', () => {
+    const result = bashParser('x=$(case $y in a) echo A;; *) echo B;; esac)');
     const command = (result.commands[0] as any).prefix[0].expansion[0];
     assertEquals(command.command, 'case $y in a) echo A;; *) echo B;; esac');
     assertEquals(command.commandAST.commands[0].type, 'Case');

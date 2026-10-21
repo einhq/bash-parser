@@ -40,7 +40,7 @@ const isDescriptor = (text: string): boolean => /^[0-9]+$/.test(text) && Number(
 
 const ioNumber: LexerPhase = (ctx) => {
   return compose<TokenIf>(
-    map(async (tk: TokenIf, _idx, iterable) => {
+    map((tk: TokenIf, _idx, iterable) => {
       const it = iterable as LookaheadIterable<TokenIf>;
       const next = it.ahead(1);
 

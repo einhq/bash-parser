@@ -19,46 +19,46 @@ function parseArithmeticAST(xp: Expansion, tokenLoc?: TokenLocation) {
 /**
  * Walk an arithmetic AST and parse what the shell must run or expand in it: a `$(…)` becomes its
  * script, a `${…}` its word. Used for `$(( ))` here, and for `(( ))` and `for (( ))` once the
- * whole input is parsed, since the grammar's actions cannot wait for a parse.
+ * whole input is parsed.
  */
-export async function resolveCommandSubstitutions<T extends AstArithmeticExpression | undefined>(node: T): Promise<T>;
-export async function resolveCommandSubstitutions(node: AstArithmeticExpression | undefined): Promise<AstArithmeticExpression | undefined> {
+export function resolveCommandSubstitutions<T extends AstArithmeticExpression | undefined>(node: T): T;
+export function resolveCommandSubstitutions(node: AstArithmeticExpression | undefined): AstArithmeticExpression | undefined {
   if (!node) return node;
 
   switch (node.type) {
     case 'CommandSubstitution': {
       if (node.commandAST) return node;
-      const commandAST = await bashParser(node.command);
+      const commandAST = bashParser(node.command);
       return { ...node, commandAST } as AstArithmeticCommandSubstitution;
     }
     case 'ParameterExpansion': {
       if (node.word) return node;
-      const script = await bashParser(`: ${node.text}`);
+      const script = bashParser(`: ${node.text}`);
       const word = (script.commands[0] as AstNodeCommand).suffix?.[0] as AstNodeWord | undefined;
       return word ? { ...node, word } : node;
     }
     case 'BinaryExpression':
     case 'LogicalExpression': {
-      const left = await resolveCommandSubstitutions(node.left);
-      const right = await resolveCommandSubstitutions(node.right);
+      const left = resolveCommandSubstitutions(node.left);
+      const right = resolveCommandSubstitutions(node.right);
       return { ...node, left, right };
     }
     case 'UnaryExpression': {
-      const argument = await resolveCommandSubstitutions(node.argument);
+      const argument = resolveCommandSubstitutions(node.argument);
       return { ...node, argument };
     }
     case 'ConditionalExpression': {
-      const test = await resolveCommandSubstitutions(node.test);
-      const consequent = await resolveCommandSubstitutions(node.consequent);
-      const alternate = await resolveCommandSubstitutions(node.alternate);
+      const test = resolveCommandSubstitutions(node.test);
+      const consequent = resolveCommandSubstitutions(node.consequent);
+      const alternate = resolveCommandSubstitutions(node.alternate);
       return { ...node, test, consequent, alternate };
     }
     case 'AssignmentExpression': {
-      const right = await resolveCommandSubstitutions(node.right);
+      const right = resolveCommandSubstitutions(node.right);
       return { ...node, right };
     }
     case 'SequenceExpression': {
-      const expressions = await Promise.all(node.expressions.map(resolveCommandSubstitutions));
+      const expressions = node.expressions.map(resolveCommandSubstitutions);
       return { ...node, expressions };
     }
     case 'UpdateExpression':
@@ -71,23 +71,21 @@ export async function resolveCommandSubstitutions(node: AstArithmeticExpression 
 }
 
 const arithmeticExpansion: LexerPhase = () =>
-  map(async (token: TokenIf) => {
+  map((token: TokenIf) => {
     if (token.is('WORD') || token.is('ASSIGNMENT_WORD')) {
       if (!token.expansion || token.expansion.length === 0) {
         return token;
       }
 
       return token.setExpansion(
-        await Promise.all(
-          token.expansion.map(async (xp: Expansion) => {
-            if (xp.type === 'ArithmeticExpansion') {
-              const arithmeticAST = parseArithmeticAST(xp, token.loc);
-              const resolvedAST = await resolveCommandSubstitutions(arithmeticAST);
-              return Object.assign({}, xp, { arithmeticAST: resolvedAST });
-            }
-            return xp;
-          }),
-        ),
+        token.expansion.map((xp: Expansion) => {
+          if (xp.type === 'ArithmeticExpansion') {
+            const arithmeticAST = parseArithmeticAST(xp, token.loc);
+            const resolvedAST = resolveCommandSubstitutions(arithmeticAST);
+            return Object.assign({}, xp, { arithmeticAST: resolvedAST });
+          }
+          return xp;
+        }),
       );
     }
     return token;

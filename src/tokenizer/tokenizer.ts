@@ -221,7 +221,7 @@ export const tokenize = (
   unterminated: 'error' | 'end' = 'error',
   substitution = false,
   posix = false,
-) => (async function* (src: string): AsyncIterable<TokenIf> {
+) => (function* (src: string): Iterable<TokenIf> {
   let state = new State(r, operators);
 
   state.posix = posix;

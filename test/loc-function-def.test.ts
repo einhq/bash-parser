@@ -2,12 +2,12 @@ import bashParser from '../src/parse.ts';
 import utils from './_utils.ts';
 
 Deno.test('loc-function-def', async (t) => {
-  await t.step('loc in function declaration', async () => {
+  await t.step('loc in function declaration', () => {
     const cmd = `foo () {
  command bar --lol;
 }
 `;
-    const result = await bashParser(cmd, { insertLOC: true });
+    const result = bashParser(cmd, { insertLOC: true });
     const expected = {
       type: 'Function',
       name: {

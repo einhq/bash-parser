@@ -21,18 +21,18 @@ export const checkResults = (actual: any, expected: any) => {
   }
 };
 
-/** The items of an array, as an async iterable. */
-export const fromArray = async function* <T>(array: T[]): AsyncIterableIterator<T> {
+/** The items of an array, as an iterable. */
+export const fromArray = function* <T>(array: T[]): IterableIterator<T> {
   for (const item of array) {
     yield item;
   }
 };
 
-/** The items of an async iterable, in an array. */
-export const toArray = async <T>(iterable: AsyncIterable<T>): Promise<T[]> => {
+/** The items of an iterable, in an array. */
+export const toArray = <T>(iterable: Iterable<T>): T[] => {
   const arr: T[] = [];
 
-  for await (const item of iterable) {
+  for (const item of iterable) {
     arr.push(item);
   }
 

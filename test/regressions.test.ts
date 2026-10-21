@@ -4,10 +4,10 @@ import type { AstNodeSubshell } from '../src/ast/types.ts';
 import utils from './_utils.ts';
 
 Deno.test('regressions', async (t) => {
-  await t.step('A digits-only argument separated from a redirect is not an IO_NUMBER', async () => {
+  await t.step('A digits-only argument separated from a redirect is not an IO_NUMBER', () => {
     // POSIX 2.10.1: an IO_NUMBER is delimited by < or > with *no intervening
     // blank*, so `seq 20 > file` keeps its operand and redirects stdout
-    const result = await bashParser('seq 20 > file.txt');
+    const result = bashParser('seq 20 > file.txt');
 
     utils.checkResults(result, {
       type: 'Script',
@@ -26,8 +26,8 @@ Deno.test('regressions', async (t) => {
     });
   });
 
-  await t.step('A digits-only argument adjacent to a redirect is still an IO_NUMBER', async () => {
-    const result = await bashParser('cmd 2>&1');
+  await t.step('A digits-only argument adjacent to a redirect is still an IO_NUMBER', () => {
+    const result = bashParser('cmd 2>&1');
 
     utils.checkResults(result, {
       type: 'Script',
@@ -46,8 +46,8 @@ Deno.test('regressions', async (t) => {
     });
   });
 
-  await t.step('Redirect should be allowed immediately following argument', async () => {
-    const result = await bashParser('echo foo>file.txt');
+  await t.step('Redirect should be allowed immediately following argument', () => {
+    const result = bashParser('echo foo>file.txt');
 
     utils.checkResults(result, {
       type: 'Script',
@@ -66,8 +66,8 @@ Deno.test('regressions', async (t) => {
     });
   });
 
-  await t.step('Equal sign should be allowed in arguments', async () => {
-    const result = await bashParser('echo foo=bar');
+  await t.step('Equal sign should be allowed in arguments', () => {
+    const result = bashParser('echo foo=bar');
     utils.checkResults(result, {
       type: 'Script',
       commands: [{
@@ -78,40 +78,40 @@ Deno.test('regressions', async (t) => {
     });
   });
 
-  await t.step('Empty string returns empty Script', async () => {
-    const result = await bashParser('');
+  await t.step('Empty string returns empty Script', () => {
+    const result = bashParser('');
     utils.checkResults(result, {
       type: 'Script',
       commands: [],
     });
   });
 
-  await t.step('Whitespace-only returns empty Script', async () => {
-    const result = await bashParser('   \n\n   ');
+  await t.step('Whitespace-only returns empty Script', () => {
+    const result = bashParser('   \n\n   ');
     utils.checkResults(result, {
       type: 'Script',
       commands: [],
     });
   });
 
-  await t.step('Comment-only returns empty Script', async () => {
-    const result = await bashParser('# this is a comment');
+  await t.step('Comment-only returns empty Script', () => {
+    const result = bashParser('# this is a comment');
     utils.checkResults(result, {
       type: 'Script',
       commands: [],
     });
   });
 
-  await t.step('Multiple newlines return empty Script', async () => {
-    const result = await bashParser('\n\n\n');
+  await t.step('Multiple newlines return empty Script', () => {
+    const result = bashParser('\n\n\n');
     utils.checkResults(result, {
       type: 'Script',
       commands: [],
     });
   });
 
-  await t.step('Nested subshell with adjacent close parens', async () => {
-    const result = await bashParser('(echo "outer"; (echo "inner"))');
+  await t.step('Nested subshell with adjacent close parens', () => {
+    const result = bashParser('(echo "outer"; (echo "inner"))');
     utils.checkResults(result, {
       type: 'Script',
       commands: [{
@@ -127,8 +127,8 @@ Deno.test('regressions', async (t) => {
     });
   });
 
-  await t.step('Deeply nested subshells with spaces', async () => {
-    const result = await bashParser('( ( (echo) ) )');
+  await t.step('Deeply nested subshells with spaces', () => {
+    const result = bashParser('( ( (echo) ) )');
     const outer = result.commands[0] as AstNodeSubshell;
     const middle = outer.list.commands[0] as AstNodeSubshell;
     const inner = middle.list.commands[0] as AstNodeSubshell;
@@ -137,25 +137,25 @@ Deno.test('regressions', async (t) => {
     utils.checkResults(inner, { type: 'Subshell' });
   });
 
-  await t.step('Multiple nested subshells with semicolons', async () => {
-    const result = await bashParser('(a; (b; (c)))');
+  await t.step('Multiple nested subshells with semicolons', () => {
+    const result = bashParser('(a; (b; (c)))');
     utils.checkResults(result.commands[0], { type: 'Subshell' });
   });
 
-  await t.step('Arithmetic command still works', async () => {
-    const result = await bashParser('(( x + 1 ))');
+  await t.step('Arithmetic command still works', () => {
+    const result = bashParser('(( x + 1 ))');
     utils.checkResults(result.commands[0], { type: 'ArithmeticCommand' });
   });
 
-  await t.step('Arithmetic inside subshell', async () => {
-    const result = await bashParser('(echo $((1+2)))');
+  await t.step('Arithmetic inside subshell', () => {
+    const result = bashParser('(echo $((1+2)))');
     utils.checkResults(result.commands[0], { type: 'Subshell' });
   });
 
-  await t.step("A line's expansions stay on its words, not the next line's first word", async () => {
+  await t.step("A line's expansions stay on its words, not the next line's first word", () => {
     // Each word carries its own expansions only, not those of the line before
     for (const line of ['echo $(date)', 'x=$((1 + 2))', 'echo "$x"']) {
-      const result = await bashParser(`${line}\necho b`);
+      const result = bashParser(`${line}\necho b`);
       const second = result.commands[1] as { name: { expansion?: unknown[] } };
 
       assertEquals(second.name.expansion, undefined, line);

@@ -5,7 +5,7 @@ import lookahead, { type LookaheadIterable } from '../../../utils/iterable/looka
 import map from '../../../utils/iterable/map.ts';
 import filterNonNull from '../../../utils/non-null.ts';
 
-const isSeparator = async (tk: TokenIf) =>
+const isSeparator = (tk: TokenIf) =>
   tk && (
     tk.is('NEWLINE') ||
     tk.is('NEWLINE_LIST') ||
@@ -15,15 +15,15 @@ const isSeparator = async (tk: TokenIf) =>
     (tk.is('OPERATOR') && tk.value === '&')
   );
 
-const skipJoined = async (tk: TokenIf) => {
+const skipJoined = (tk: TokenIf) => {
   if (tk.ctx?.joinedToSeparator) {
     return null;
   }
   return tk;
 };
 
-const toSeparatorToken = async (tk: TokenIf, iterable?: AsyncIterable<TokenIf>) => {
-  if (await skipJoined(tk) === null) {
+const toSeparatorToken = (tk: TokenIf, iterable?: Iterable<TokenIf>) => {
+  if (skipJoined(tk) === null) {
     return null;
   }
 
@@ -32,7 +32,7 @@ const toSeparatorToken = async (tk: TokenIf, iterable?: AsyncIterable<TokenIf>) 
 
   let i = 1;
   let nextTk = it.ahead(i);
-  while (await isSeparator(nextTk!)) {
+  while (isSeparator(nextTk!)) {
     nextTk!.ctx!.joinedToSeparator = true;
     i++;
     newTk = newTk.appendValue(nextTk!.value!);
@@ -47,8 +47,7 @@ const AccumulateSeparators = {
   NEWLINE_LIST: skipJoined,
   SEMICOLON: toSeparatorToken,
   AND: toSeparatorToken,
-  OPERATOR: async (tk: TokenIf, iterable?: AsyncIterable<TokenIf>) =>
-    tk.value === '&' || tk.value === ';' ? await toSeparatorToken(tk, iterable as LookaheadIterable<TokenIf>) : tk,
+  OPERATOR: (tk: TokenIf, iterable?: Iterable<TokenIf>) => tk.value === '&' || tk.value === ';' ? toSeparatorToken(tk, iterable as LookaheadIterable<TokenIf>) : tk,
 };
 
 /*

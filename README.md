@@ -24,7 +24,6 @@ This project is a fork of the original [bash-parser](https://github.com/vorpaljs
 - Minimize dependencies where feasible
 - Migrate the codebase to TypeScript
 - Ensure compatibility with [Deno](https://deno.com/) instead of [Node.js](https://nodejs.org/)
-- Update the API to support asynchronous resolvers
 - Distribute releases via [JSR](https://jsr.io/)
 
 ### Non-Objectives
@@ -41,7 +40,6 @@ This project is a fork of the original [bash-parser](https://github.com/vorpaljs
 - Arithmetic expressions parsed into their own AST (`parseArithmetic`)
 - Aliases expanded where bash expands them, through a resolver
 - Syntax errors as bash reports them: the unexpected token, an unexpected end of file, or the quote that never closed
-- Supports asynchronous resolvers
 
 ## Installation
 
@@ -54,7 +52,7 @@ deno add jsr:@ein/bash-parser
 ```ts
 import { parse } from '@ein/bash-parser';
 
-const ast = await parse('echo ciao');
+const ast = parse('echo ciao');
 ```
 
 `ast` result is:
@@ -97,7 +95,7 @@ A syntax error throws a `BashSyntaxError`. Its `location` is where the error is,
 import { BashSyntaxError, parse } from '@ein/bash-parser';
 
 try {
-  await parse('if true; then');
+  parse('if true; then');
 } catch (e) {
   if (e instanceof BashSyntaxError) {
     e.detail; // { kind: 'eof' }  — 'token', 'eof', 'unclosed' or 'arithmeticFor'

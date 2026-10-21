@@ -34,7 +34,7 @@ const overlapsWithExpansion = (glob: GlobPattern, expansions: Expansion[]): bool
  * This phase tracks patterns for later resolution - it does NOT resolve them.
  */
 const pathExpansionDetect: LexerPhase = () =>
-  map(async (token: TokenIf) => {
+  map((token: TokenIf) => {
     if (token.is('WORD')) {
       const text = token.value!;
 

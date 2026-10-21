@@ -6,7 +6,7 @@ import map from '../../../utils/iterable/map.ts';
 
 const identifyMaybeSimpleCommands: LexerPhase = (ctx) => {
   return compose<TokenIf>(
-    map(async (tk: TokenIf, _idx, iterable) => {
+    map((tk: TokenIf, _idx, iterable) => {
       const it = iterable as LookaheadIterable<TokenIf>;
       const last = it.behind(1) || { EMPTY: true, is: (type: string) => type === 'EMPTY' };
 

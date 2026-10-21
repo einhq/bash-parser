@@ -18,8 +18,8 @@ const expandAlias = (preAliasLexer: LexerPhaseFn, resolveAlias: Resolvers['resol
   // `alias fi=echo` makes `fi x` print x. `in` is the exception, never a command.
   const commandName = (token: TokenIf) => (token.is('WORD') && !!token.ctx?.maybeSimpleCommandName) || (!token.is('In') && reservedWords.some((word) => token.is(word)));
 
-  async function* tryExpandToken(token: TokenIf, expandingAliases: string[]): AsyncIterable<TokenIf> {
-    const result = expandingAliases.includes(token.value!) ? undefined : await resolveAlias!(token.value!);
+  function* tryExpandToken(token: TokenIf, expandingAliases: string[]): Iterable<TokenIf> {
+    const result = expandingAliases.includes(token.value!) ? undefined : resolveAlias!(token.value!);
 
     if (result === undefined) {
       yield token;
@@ -32,7 +32,7 @@ const expandAlias = (preAliasLexer: LexerPhaseFn, resolveAlias: Resolvers['resol
     const tokens: TokenIf[] = [];
 
     try {
-      for await (const newToken of preAliasLexer(result)) {
+      for (const newToken of preAliasLexer(result)) {
         tokens.push(newToken);
       }
     } catch {
@@ -67,7 +67,7 @@ const expandAlias = (preAliasLexer: LexerPhaseFn, resolveAlias: Resolvers['resol
     }
   }
 
-  const expandToken = async (tk: TokenIf) => {
+  const expandToken = (tk: TokenIf) => {
     const check = commandName(tk) || (checkNext && tk.is('WORD'));
 
     checkNext = false;
@@ -78,7 +78,7 @@ const expandAlias = (preAliasLexer: LexerPhaseFn, resolveAlias: Resolvers['resol
 
     const result: TokenIf[] = [];
 
-    for await (const newToken of tryExpandToken(tk, [])) {
+    for (const newToken of tryExpandToken(tk, [])) {
       result.push(newToken);
     }
 

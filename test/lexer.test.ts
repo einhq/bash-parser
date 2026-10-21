@@ -2,11 +2,11 @@ import { Lexer } from '../src/lexer/mod.ts';
 import mode from '../src/modes/bash/mod.ts';
 import utils from './_utils.ts';
 
-const tokenize = async (text: string, rawTokens?: boolean) => {
+const tokenize = (text: string, rawTokens?: boolean) => {
   const lexer = new Lexer(mode.init(), {});
   lexer.setInput(text);
   const results = [];
-  let token = await lexer.lex();
+  let token = lexer.lex();
   while (token !== 'EOF') {
     if (rawTokens) {
       const value = structuredClone(lexer.yytext);
@@ -21,14 +21,14 @@ const tokenize = async (text: string, rawTokens?: boolean) => {
       results.push({ token, value });
     }
 
-    token = await lexer.lex();
+    token = lexer.lex();
   }
   return results;
 };
 
 Deno.test('lexer', async (t) => {
-  await t.step('parses parameter substitution', async () => {
-    const result = await tokenize('echo word${other}test', true);
+  await t.step('parses parameter substitution', () => {
+    const result = tokenize('echo word${other}test', true);
     utils.checkResults(result, [{
       token: 'WORD',
       value: {
@@ -58,8 +58,8 @@ Deno.test('lexer', async (t) => {
     );
   });
 
-  await t.step('parses unquoted parameter substitution', async () => {
-    const result = await tokenize('echo word$test', true);
+  await t.step('parses unquoted parameter substitution', () => {
+    const result = tokenize('echo word$test', true);
     utils.checkResults(result, [{ token: 'WORD', value: { text: 'echo' } }, {
       token: 'WORD',
       value: {
@@ -81,8 +81,8 @@ Deno.test('lexer', async (t) => {
     );
   });
 
-  await t.step('unquoted parameter delimited by symbol', async () => {
-    const result = await tokenize('echo word$test,,', true);
+  await t.step('unquoted parameter delimited by symbol', () => {
+    const result = tokenize('echo word$test,,', true);
 
     utils.checkResults(result, [{ token: 'WORD', value: { text: 'echo' } }, {
       token: 'WORD',
@@ -105,86 +105,86 @@ Deno.test('lexer', async (t) => {
     );
   });
 
-  await t.step('parse single operator', async () => {
+  await t.step('parse single operator', () => {
     utils.checkResults(
-      await tokenize('<<'),
+      tokenize('<<'),
       [{ token: 'DLESS', value: '<<' }],
     );
   });
 
-  await t.step('parse redirections', async () => {
+  await t.step('parse redirections', () => {
     utils.checkResults(
-      await tokenize('echo>ciao'),
+      tokenize('echo>ciao'),
       [{ token: 'WORD', value: 'echo' }, { token: 'GREAT', value: '>' }, { token: 'WORD', value: 'ciao' }],
     );
   });
 
-  await t.step('parse io-number redirections', async () => {
+  await t.step('parse io-number redirections', () => {
     utils.checkResults(
-      await tokenize('echo 2> ciao'),
+      tokenize('echo 2> ciao'),
       [{ token: 'WORD', value: 'echo' }, { token: 'IO_NUMBER', value: '2' }, { token: 'GREAT', value: '>' }, { token: 'WORD', value: 'ciao' }],
     );
   });
 
-  await t.step('parse two operators on two lines', async () => {
+  await t.step('parse two operators on two lines', () => {
     utils.checkResults(
-      await tokenize('<<\n>>'),
+      tokenize('<<\n>>'),
       [{ token: 'DLESS', value: '<<' }, { token: 'NEWLINE_LIST', value: '\n' }, { token: 'DGREAT', value: '>>' }],
     );
   });
 
-  await t.step('parse two words', async () => {
+  await t.step('parse two words', () => {
     utils.checkResults(
-      await tokenize('echo 42'),
+      tokenize('echo 42'),
       [{ token: 'WORD', value: 'echo' }, { token: 'WORD', value: '42' }],
     );
   });
 
-  await t.step('support character escaping', async () => {
+  await t.step('support character escaping', () => {
     utils.checkResults(
-      await tokenize('echo\\>23'),
+      tokenize('echo\\>23'),
       [{ token: 'WORD', value: 'echo>23' }],
     );
   });
 
-  await t.step('support line continuations', async () => {
+  await t.step('support line continuations', () => {
     utils.checkResults(
-      await tokenize('echo\\\n23'),
+      tokenize('echo\\\n23'),
       [{ token: 'WORD', value: 'echo23' }],
     );
   });
 
-  await t.step('support single quotes', async () => {
+  await t.step('support single quotes', () => {
     utils.checkResults(
-      await tokenize("echo 'CIAO 42'"),
+      tokenize("echo 'CIAO 42'"),
       [{ token: 'WORD', value: 'echo' }, { token: 'WORD', value: 'CIAO 42' }],
     );
   });
 
-  await t.step('support &&', async () => {
+  await t.step('support &&', () => {
     utils.checkResults(
-      await tokenize('run && stop'),
+      tokenize('run && stop'),
       [{ token: 'WORD', value: 'run' }, { token: 'AND_IF', value: '&&' }, { token: 'WORD', value: 'stop' }],
     );
   });
 
-  await t.step('support &', async () => {
+  await t.step('support &', () => {
     utils.checkResults(
-      await tokenize('run &'),
+      tokenize('run &'),
       [{ token: 'WORD', value: 'run' }, { token: 'SEPARATOR_OP', value: '&' }],
     );
   });
 
-  await t.step('support ||', async () => {
+  await t.step('support ||', () => {
     utils.checkResults(
-      await tokenize('run || stop'),
+      tokenize('run || stop'),
       [{ token: 'WORD', value: 'run' }, { token: 'OR_IF', value: '||' }, { token: 'WORD', value: 'stop' }],
     );
   });
 
-  await t.step('support for', async () => {
+  await t.step('support for', () => {
     utils.checkResults(
-      await tokenize('for x in a b c; do echo x; done'),
+      tokenize('for x in a b c; do echo x; done'),
       [
         { token: 'For', value: 'for' },
         { token: 'NAME', value: 'x' },
@@ -202,9 +202,9 @@ Deno.test('lexer', async (t) => {
     );
   });
 
-  await t.step('support for with default sequence', async () => {
+  await t.step('support for with default sequence', () => {
     utils.checkResults(
-      await tokenize('for x in; do echo x; done'),
+      tokenize('for x in; do echo x; done'),
       [
         { token: 'For', value: 'for' },
         { token: 'NAME', value: 'x' },
@@ -219,23 +219,23 @@ Deno.test('lexer', async (t) => {
     );
   });
 
-  await t.step('support double quotes', async () => {
+  await t.step('support double quotes', () => {
     utils.checkResults(
-      await tokenize('echo "CIAO 42"'),
+      tokenize('echo "CIAO 42"'),
       [{ token: 'WORD', value: 'echo' }, { token: 'WORD', value: 'CIAO 42' }],
     );
   });
 
-  await t.step('support multiple commands', async () => {
+  await t.step('support multiple commands', () => {
     utils.checkResults(
-      await tokenize('echo; \nls;'),
+      tokenize('echo; \nls;'),
       [{ token: 'WORD', value: 'echo' }, { token: 'SEPARATOR_OP', value: ';\n' }, { token: 'WORD', value: 'ls' }, { token: 'SEPARATOR_OP', value: ';' }],
     );
   });
 
-  await t.step('support while', async () => {
+  await t.step('support while', () => {
     utils.checkResults(
-      await tokenize('while [[ -e foo ]]; do sleep 1; done'),
+      tokenize('while [[ -e foo ]]; do sleep 1; done'),
       [
         { token: 'While', value: 'while' },
         { token: 'DOUBLE_OPEN_BRACKET', value: '[[' },

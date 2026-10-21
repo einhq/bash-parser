@@ -24,7 +24,7 @@ const couldBeCommandName = (tk: TokenIf) => {
 
 const identifySimpleCommandNames: LexerPhase = (ctx) =>
   compose<TokenIf>(
-    map(async (tk: TokenIf, _idx, iterable) => {
+    map((tk: TokenIf, _idx, iterable) => {
       const it = iterable as LookaheadIterable<TokenIf>;
       if (tk.ctx?.maybeStartOfSimpleCommand) {
         if (couldBeCommandName(tk)) {

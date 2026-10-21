@@ -6,7 +6,7 @@ import deepCopy from '../../../utils/deep-copy.ts';
 import toPascal from '../../../utils/to-pascal-case.ts';
 
 const defaultNodeType: LexerPhase = () =>
-  map(async (token: TokenIf) => {
+  map((token: TokenIf) => {
     const tk = deepCopy(token);
 
     assert(tk.type, 'Token type is required');

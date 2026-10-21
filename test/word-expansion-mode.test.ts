@@ -2,8 +2,8 @@ import bashParser from '../src/parse.ts';
 import utils from './_utils.ts';
 
 Deno.test('word-expansion-mode', async (t) => {
-  await t.step('expand on a single word', async () => {
-    const result = await bashParser('ls $var > res.txt', {
+  await t.step('expand on a single word', () => {
+    const result = bashParser('ls $var > res.txt', {
       mode: 'word-expansion',
     });
 
@@ -27,8 +27,8 @@ Deno.test('word-expansion-mode', async (t) => {
     }, result);
   });
 
-  await t.step('handles empty input', async () => {
-    const result = await bashParser('', {
+  await t.step('handles empty input', () => {
+    const result = bashParser('', {
       mode: 'word-expansion',
     });
     utils.checkResults({
@@ -37,8 +37,8 @@ Deno.test('word-expansion-mode', async (t) => {
     }, result);
   });
 
-  await t.step('handles single quoted string', async () => {
-    const result = await bashParser("'hello world'", {
+  await t.step('handles single quoted string', () => {
+    const result = bashParser("'hello world'", {
       mode: 'word-expansion',
     });
     utils.checkResults({
@@ -53,8 +53,8 @@ Deno.test('word-expansion-mode', async (t) => {
     }, result);
   });
 
-  await t.step('handles double quoted string with expansion', async () => {
-    const result = await bashParser('"hello $var"', {
+  await t.step('handles double quoted string with expansion', () => {
+    const result = bashParser('"hello $var"', {
       mode: 'word-expansion',
     });
     // In word expansion mode, text includes quotes when unresolved
@@ -70,8 +70,8 @@ Deno.test('word-expansion-mode', async (t) => {
     });
   });
 
-  await t.step('handles backslash escaping', async () => {
-    const result = await bashParser('hello\\ world', {
+  await t.step('handles backslash escaping', () => {
+    const result = bashParser('hello\\ world', {
       mode: 'word-expansion',
     });
     utils.checkResults({
@@ -86,8 +86,8 @@ Deno.test('word-expansion-mode', async (t) => {
     }, result);
   });
 
-  await t.step('handles line continuation (backslash newline)', async () => {
-    const result = await bashParser('hello\\\nworld', {
+  await t.step('handles line continuation (backslash newline)', () => {
+    const result = bashParser('hello\\\nworld', {
       mode: 'word-expansion',
     });
     utils.checkResults({
@@ -102,8 +102,8 @@ Deno.test('word-expansion-mode', async (t) => {
     }, result);
   });
 
-  await t.step('handles backtick command substitution', async () => {
-    const result = await bashParser('`echo hi`', {
+  await t.step('handles backtick command substitution', () => {
+    const result = bashParser('`echo hi`', {
       mode: 'word-expansion',
     });
     // Verify expansion is present
@@ -114,8 +114,8 @@ Deno.test('word-expansion-mode', async (t) => {
     });
   });
 
-  await t.step('handles dollar command substitution', async () => {
-    const result = await bashParser('$(echo hi)', {
+  await t.step('handles dollar command substitution', () => {
+    const result = bashParser('$(echo hi)', {
       mode: 'word-expansion',
     });
     // Verify expansion is present
@@ -126,9 +126,9 @@ Deno.test('word-expansion-mode', async (t) => {
     });
   });
 
-  await t.step('handles plain text', async () => {
+  await t.step('handles plain text', () => {
     // In word expansion mode, text without special chars is treated as a single word
-    const result = await bashParser('plaintext', {
+    const result = bashParser('plaintext', {
       mode: 'word-expansion',
     });
     utils.checkResults({
@@ -143,8 +143,8 @@ Deno.test('word-expansion-mode', async (t) => {
     }, result);
   });
 
-  await t.step('handles arithmetic expansion', async () => {
-    const result = await bashParser('$((1+2))', {
+  await t.step('handles arithmetic expansion', () => {
+    const result = bashParser('$((1+2))', {
       mode: 'word-expansion',
     });
     // Verify expansion is present

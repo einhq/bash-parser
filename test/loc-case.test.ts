@@ -2,13 +2,13 @@ import bashParser from '../src/parse.ts';
 import utils, { mkloc2 as mkloc } from './_utils.ts';
 
 Deno.test('loc-case', async (t) => {
-  await t.step('case statement has loc', async () => {
+  await t.step('case statement has loc', () => {
     const cmd = `case foo in
  * )
   echo bar;;
 esac
 `;
-    const result = await bashParser(cmd, { insertLOC: true });
+    const result = bashParser(cmd, { insertLOC: true });
 
     const expected = {
       type: 'Case',

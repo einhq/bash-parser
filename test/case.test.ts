@@ -2,8 +2,8 @@ import bashParser from '../src/parse.ts';
 import utils from './_utils.ts';
 
 Deno.test('case', async (t) => {
-  await t.step('parse case', async () => {
-    const result = await bashParser('case foo in * ) echo bar;; esac');
+  await t.step('parse case', () => {
+    const result = bashParser('case foo in * ) echo bar;; esac');
 
     const expected = {
       type: 'Script',

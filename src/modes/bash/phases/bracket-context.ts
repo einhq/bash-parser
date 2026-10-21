@@ -85,7 +85,7 @@ const join = (a: TokenIf, b: TokenIf): TokenIf => {
  * `|`: `=~ ^(a|b)?c$`, `== @(x|+([^/]))`.
  */
 const bracketContext: LexerPhase = () =>
-  async function* (tokens: AsyncIterable<TokenIf>) {
+  function* (tokens: Iterable<TokenIf>) {
     let inConditional = false;
     let previous: TokenIf | undefined;
     // The pattern word being put together, how deep in its own parentheses it
@@ -94,7 +94,7 @@ const bracketContext: LexerPhase = () =>
     let depth = 0;
     let patternNext = false;
 
-    for await (const raw of tokens) {
+    for (const raw of tokens) {
       let token = raw;
 
       if (!inConditional && token.is('TOKEN') && token.value === '[[' && startsCommand(previous)) {

@@ -2,7 +2,7 @@ import type { Enums } from '../modes/types.ts';
 import type { TokenIf } from '../tokenizer/types.ts';
 import type { Resolvers } from '../types.ts';
 
-export type LexerMapper = (tokens: AsyncIterable<TokenIf>) => AsyncIterable<TokenIf>;
+export type LexerMapper = (tokens: Iterable<TokenIf>) => Iterable<TokenIf>;
 
 export type LexerContext = {
   resolvers: Resolvers;
@@ -17,6 +17,6 @@ export type LexerContext = {
  */
 export type LexerPhase = (ctx: LexerContext) => LexerMapper;
 
-export type LexerPhaseFn = (...input: any[]) => AsyncIterable<TokenIf>;
+export type LexerPhaseFn = (...input: any[]) => Iterable<TokenIf>;
 
 export type LexerPhases = Record<string, LexerPhase>;

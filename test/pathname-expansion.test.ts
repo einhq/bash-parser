@@ -2,8 +2,8 @@ import bashParser from '../src/parse.ts';
 import utils from './_utils.ts';
 
 Deno.test('pathname-expansion', async (t) => {
-  await t.step('tracks glob pattern as PathExpansion without resolver', async () => {
-    const result = await bashParser('echo *.txt');
+  await t.step('tracks glob pattern as PathExpansion without resolver', () => {
+    const result = bashParser('echo *.txt');
     utils.checkResults((result as any).commands[0].suffix[0], {
       type: 'Word',
       text: '*.txt',

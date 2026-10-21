@@ -28,7 +28,7 @@ const asPattern = (token: TokenIf): TokenIf => mkToken('WORD', token.value, { lo
  * `)` ends the item.
  */
 const casePatterns: LexerPhase = () =>
-  async function* (tokens: AsyncIterable<TokenIf>) {
+  function* (tokens: Iterable<TokenIf>) {
     const frames: Frame[] = [];
     // The pattern being put together, and how deep in its parentheses it is
     let pattern: TokenIf | undefined;
@@ -36,7 +36,7 @@ const casePatterns: LexerPhase = () =>
     // After a pattern list's `(` or a `|`, the next word is a pattern whatever it reads: `(esac)`
     let patternNext = false;
 
-    for await (const token of tokens) {
+    for (const token of tokens) {
       const frame = frames[frames.length - 1];
 
       if (pattern) {

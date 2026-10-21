@@ -23,7 +23,6 @@
   "lint": {
     "rules": {
       "exclude": [
-        "require-await",
         "no-explicit-any"
       ]
     }

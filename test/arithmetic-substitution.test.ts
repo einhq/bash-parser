@@ -3,8 +3,8 @@ import bashParser from '../src/parse.ts';
 import utils from './_utils.ts';
 
 Deno.test('arithmetic substitution', async (t) => {
-  await t.step('arithmetic substitution', async () => {
-    const result = await bashParser('variable=$((42 + 43))');
+  await t.step('arithmetic substitution', () => {
+    const result = bashParser('variable=$((42 + 43))');
     delete (result as any).commands[0].prefix[0].expansion[0].arithmeticAST;
     utils.checkResults((result as any).commands[0].prefix[0], {
       text: 'variable=$((42 + 43))',
@@ -20,16 +20,16 @@ Deno.test('arithmetic substitution', async (t) => {
     });
   });
 
-  await t.step('arithmetic substitution skip single quoted words', async () => {
-    const result = await bashParser("echo '$((42 * 42))'");
+  await t.step('arithmetic substitution skip single quoted words', () => {
+    const result = bashParser("echo '$((42 * 42))'");
     utils.checkResults((result as any).commands[0].suffix, [{
       type: 'Word',
       text: '$((42 * 42))',
     }]);
   });
 
-  await t.step('arithmetic substitution skip escaped dollar', async () => {
-    const result = await bashParser('echo "\\$(\\(42 * 42))"');
+  await t.step('arithmetic substitution skip escaped dollar', () => {
+    const result = bashParser('echo "\\$(\\(42 * 42))"');
     // In bash, \$ inside double quotes becomes $ (backslash removed)
     // \( stays as \( since ( is not a special char inside double quotes
     utils.checkResults((result as any).commands[0].suffix, [{
@@ -38,8 +38,8 @@ Deno.test('arithmetic substitution', async (t) => {
     }]);
   });
 
-  await t.step('arithmetic & parameter substitution', async () => {
-    const result = await bashParser('variable=$((42 + 43)) $ciao');
+  await t.step('arithmetic & parameter substitution', () => {
+    const result = bashParser('variable=$((42 + 43)) $ciao');
 
     delete (result as any).commands[0].prefix[0].expansion[0].arithmeticAST;
     utils.checkResults((result as any).commands[0].prefix[0], {
@@ -69,8 +69,8 @@ Deno.test('arithmetic substitution', async (t) => {
     });
   });
 
-  await t.step('arithmetic substitution in suffix', async () => {
-    const result = await bashParser('echo $((42 + 43))');
+  await t.step('arithmetic substitution in suffix', () => {
+    const result = bashParser('echo $((42 + 43))');
     delete (result as any).commands[0].suffix[0].expansion[0].arithmeticAST;
     utils.checkResults((result as any).commands[0].suffix[0], {
       type: 'Word',
@@ -87,22 +87,22 @@ Deno.test('arithmetic substitution', async (t) => {
   });
 
   // bash checks arithmetic only after expansion, when it runs: `bash -n` accepts both
-  await t.step('an invalid expression parses, keeping its text and no AST', async () => {
-    const result = await bashParser('echo $((a b c d))');
+  await t.step('an invalid expression parses, keeping its text and no AST', () => {
+    const result = bashParser('echo $((a b c d))');
     const expansion = (result.commands[0] as any).suffix[0].expansion[0];
     assertEquals(expansion.expression, 'a b c d');
     assertEquals(expansion.arithmeticAST, undefined);
   });
 
-  await t.step('a non-expression parses too, for the executor to reject', async () => {
-    const result = await bashParser('echo $((while(1);))');
+  await t.step('a non-expression parses too, for the executor to reject', () => {
+    const result = bashParser('echo $((while(1);))');
     const expansion = (result.commands[0] as any).suffix[0].expansion[0];
     assertEquals(expansion.expression, 'while(1);');
     assertEquals(expansion.arithmeticAST, undefined);
   });
 
-  await t.step('arithmetic ast is parsed', async () => {
-    const result = await bashParser('variable=$((42 + 43))');
+  await t.step('arithmetic ast is parsed', () => {
+    const result = bashParser('variable=$((42 + 43))');
 
     // Positions are absolute: token starts at 0, expansion at 9, expression content at 12
     utils.checkResults((result as any).commands[0].prefix[0].expansion[0].arithmeticAST, {
@@ -151,8 +151,8 @@ Deno.test('arithmetic substitution', async (t) => {
     });
   });
 
-  await t.step('arithmetic command (( expr ))', async () => {
-    const result = await bashParser('(( 2 + 3 == 5 ))');
+  await t.step('arithmetic command (( expr ))', () => {
+    const result = bashParser('(( 2 + 3 == 5 ))');
 
     utils.checkResults(result.commands[0], {
       type: 'ArithmeticCommand',
@@ -180,8 +180,8 @@ Deno.test('arithmetic substitution', async (t) => {
     });
   });
 
-  await t.step('command substitution inside arithmetic', async () => {
-    const result = await bashParser('echo $(($(echo 5) + 3))');
+  await t.step('command substitution inside arithmetic', () => {
+    const result = bashParser('echo $(($(echo 5) + 3))');
 
     const expansion = (result as any).commands[0].suffix[0].expansion[0];
     utils.checkResults(expansion.type, 'ArithmeticExpansion');
@@ -199,8 +199,8 @@ Deno.test('arithmetic substitution', async (t) => {
     utils.checkResults(arithmeticAST.left.commandAST.commands[0].name.text, 'echo');
   });
 
-  await t.step('multiple command substitutions inside arithmetic', async () => {
-    const result = await bashParser('echo $(($(echo 5) + $(echo 3)))');
+  await t.step('multiple command substitutions inside arithmetic', () => {
+    const result = bashParser('echo $(($(echo 5) + $(echo 3)))');
 
     const expansion = (result as any).commands[0].suffix[0].expansion[0];
     utils.checkResults(expansion.expression, '$(echo 5) + $(echo 3)');
@@ -212,8 +212,8 @@ Deno.test('arithmetic substitution', async (t) => {
     utils.checkResults(arithmeticAST.right.command, 'echo 3');
   });
 
-  await t.step('nested command substitution inside arithmetic', async () => {
-    const result = await bashParser('echo $(($(echo $(echo 5)) + 1))');
+  await t.step('nested command substitution inside arithmetic', () => {
+    const result = bashParser('echo $(($(echo $(echo 5)) + 1))');
 
     const expansion = (result as any).commands[0].suffix[0].expansion[0];
     utils.checkResults(expansion.expression, '$(echo $(echo 5)) + 1');
@@ -228,8 +228,8 @@ Deno.test('arithmetic substitution', async (t) => {
     utils.checkResults(innerCmd.suffix[0].expansion[0].command, 'echo 5');
   });
 
-  await t.step('arithmetic inside command substitution', async () => {
-    const result = await bashParser(
+  await t.step('arithmetic inside command substitution', () => {
+    const result = bashParser(
       'for i in $(seq 0 $(($FACE_COUNT - 1))); do echo $i; done',
     );
     utils.checkResults(result.commands[0].type, 'For');
@@ -243,8 +243,8 @@ Deno.test('arithmetic substitution', async (t) => {
     utils.checkResults(expansion.command, 'seq 0 $(($FACE_COUNT - 1))');
   });
 
-  await t.step('command substitution with complex expression', async () => {
-    const result = await bashParser('x=$(($(cat count.txt) * 2 + $(wc -l < file.txt)))');
+  await t.step('command substitution with complex expression', () => {
+    const result = bashParser('x=$(($(cat count.txt) * 2 + $(wc -l < file.txt)))');
 
     const expansion = (result as any).commands[0].prefix[0].expansion[0];
     utils.checkResults(expansion.type, 'ArithmeticExpansion');
@@ -260,15 +260,15 @@ Deno.test('arithmetic substitution', async (t) => {
   });
 });
 
-Deno.test('$[expr] is the old spelling of $((expr))', async () => {
-  const word = (await bashParser('echo x$[a[0] + 1]y')).commands[0] as unknown as { suffix: { text: string; expansion: { type: string; expression: string }[] }[] };
+Deno.test('$[expr] is the old spelling of $((expr))', () => {
+  const word = (bashParser('echo x$[a[0] + 1]y')).commands[0] as unknown as { suffix: { text: string; expansion: { type: string; expression: string }[] }[] };
 
   assertEquals(word.suffix[0].expansion[0].type, 'ArithmeticExpansion');
   assertEquals(word.suffix[0].expansion[0].expression, 'a[0] + 1');
 });
 
-Deno.test('a $ the input ends on is a $', async () => {
-  const command = (await bashParser('echo $')).commands[0] as unknown as { suffix: { text: string }[] };
+Deno.test('a $ the input ends on is a $', () => {
+  const command = (bashParser('echo $')).commands[0] as unknown as { suffix: { text: string }[] };
 
   assertEquals(command.suffix[0].text, '$');
 });

@@ -91,7 +91,7 @@ const unquoteArrayLiteral = (text: string, protectedRanges: ProtectedRange[]): s
 const hasExpansions = (token: TokenIf) => (token.expansion?.length ?? 0) > 0;
 
 const quoteRemoval: LexerPhase = () =>
-  map(async (token: TokenIf) => {
+  map((token: TokenIf) => {
     // A pattern is matched by the executor, which has to see its quotes
     if (token.ctx.pattern) {
       return token;

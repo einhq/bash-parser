@@ -34,8 +34,8 @@ Deno.test('fixtures', async (t) => {
   const fixtures = await loadFixtures();
 
   for (const fixture of fixtures) {
-    await t.step(fixture.name, async () => {
-      const result = await bashParser(fixture.sourceCode, fixture.options);
+    await t.step(fixture.name, () => {
+      const result = bashParser(fixture.sourceCode, fixture.options);
 
       utils.checkResults(result, fixture.result);
     });

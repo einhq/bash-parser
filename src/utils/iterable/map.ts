@@ -1,21 +1,21 @@
 import is from '../../utils/iterable/is.ts';
 
-export type MapFunction<T> = (value: T, idx: number, iter: AsyncIterable<T>) => Promise<T | T[] | null>;
-export type MapperFunction<T> = (it: AsyncIterable<T>) => AsyncIterable<T>;
+export type MapFunction<T> = (value: T, idx: number, iter: Iterable<T>) => T | T[] | null;
+export type MapperFunction<T> = (it: Iterable<T>) => Iterable<T>;
 
 const map = <T>(transform: MapFunction<T>): MapperFunction<T> => {
   if (typeof transform !== 'function') {
     throw new TypeError('transform argument must be a function');
   }
 
-  return async function* (it) {
+  return function* (it) {
     if (!is(it)) {
       throw new TypeError('argument must be an iterable');
     }
 
     let idx = 0;
-    for await (const item of it) {
-      const result = await transform(item, idx++, it);
+    for (const item of it) {
+      const result = transform(item, idx++, it);
 
       if (result === null) {
         continue;

@@ -64,25 +64,25 @@ const attachHereDocuments = (node: unknown, docs: HereDocument[]): void => {
  * Parse the `$(…)` and `${…}` inside each `(( … ))` and `for (( … ))`. Their nodes are built by the
  * grammar's synchronous actions; `$(( ))` gets the same in its lexer phase.
  */
-const resolveArithmeticCommands = async (node: unknown): Promise<void> => {
+const resolveArithmeticCommands = (node: unknown): void => {
   if (!node || typeof node !== 'object') return;
   if (Array.isArray(node)) {
-    for (const item of node) await resolveArithmeticCommands(item);
+    for (const item of node) resolveArithmeticCommands(item);
     return;
   }
   const record = node as Record<string, unknown>;
   if (record.type === 'ArithmeticCommand') {
     const command = record as AstNodeArithmeticCommand;
-    command.arithmeticAST = await resolveCommandSubstitutions(command.arithmeticAST);
+    command.arithmeticAST = resolveCommandSubstitutions(command.arithmeticAST);
     return;
   }
   if (record.type === 'ArithmeticFor') {
     const loop = record as AstNodeArithmeticFor;
     for (const part of [loop.init, loop.test, loop.update]) {
-      if (part) part.arithmeticAST = await resolveCommandSubstitutions(part.arithmeticAST);
+      if (part) part.arithmeticAST = resolveCommandSubstitutions(part.arithmeticAST);
     }
   }
-  for (const value of Object.values(record)) await resolveArithmeticCommands(value);
+  for (const value of Object.values(record)) resolveArithmeticCommands(value);
 };
 
 /**
@@ -127,14 +127,14 @@ function cacheKey(sourceCode: string, options?: Options): string | undefined {
   return JSON.stringify([sourceCode, entries.sort(([a], [b]) => a < b ? -1 : 1)]);
 }
 
-export const parse: Parse = async (sourceCode, options?) => {
+export const parse: Parse = (sourceCode, options?) => {
   const key = cacheKey(sourceCode, options);
   const cached = key === undefined ? undefined : cache.get(key);
 
   // A copy each time: whoever gets it may change it
   if (cached) return structuredClone(cached);
 
-  const ast = await parseSource(sourceCode, options);
+  const ast = parseSource(sourceCode, options);
 
   if (key !== undefined) {
     try {
@@ -149,7 +149,7 @@ export const parse: Parse = async (sourceCode, options?) => {
   return ast;
 };
 
-const parseSource: Parse = async (sourceCode, options?) => {
+const parseSource: Parse = (sourceCode, options?) => {
   let lexer: Lexer | undefined;
 
   try {
@@ -162,9 +162,9 @@ const parseSource: Parse = async (sourceCode, options?) => {
     parser.lexer = lexer;
     parser.yy = astBuilder(options.insertLOC, sourceCode);
 
-    const ast = await parser.parse(sourceCode);
+    const ast = parser.parse(sourceCode);
     attachHereDocuments(ast, lexer.hereDocuments);
-    await resolveArithmeticCommands(ast);
+    resolveArithmeticCommands(ast);
     return ast;
   } catch (err) {
     // A here-document the input ended inside of is warned about before the error

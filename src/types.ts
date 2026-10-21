@@ -10,7 +10,7 @@ export type Resolvers = {
    * @param name - The name of the alias to resolve.
    * @returns The resolved code if the alias exists, otherwise `undefined`.
    */
-  resolveAlias?: (name: string) => Promise<string | undefined>;
+  resolveAlias?: (name: string) => string | undefined;
 
   /**
    * Leave tilde prefixes for the caller to expand when it runs the word, as a
@@ -63,4 +63,4 @@ export type Options = Resolvers & {
  * @param options - The options to use for the parsing.
  * @returns The AST of the shell script.
  */
-export type Parse = (sourceCode: string, options?: Options) => Promise<AstNodeScript>;
+export type Parse = (sourceCode: string, options?: Options) => AstNodeScript;

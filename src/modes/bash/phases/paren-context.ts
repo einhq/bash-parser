@@ -7,7 +7,7 @@ type ParenContext = 'subshell' | 'arithmetic';
 const parenContext: LexerPhase = () => {
   const contextStack: ParenContext[] = [];
 
-  return map(async (token: TokenIf) => {
+  return map((token: TokenIf) => {
     if (token.is('DOUBLE_OPEN_PAREN')) {
       contextStack.push('arithmetic');
       return token;

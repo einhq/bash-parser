@@ -49,7 +49,7 @@ const reservedWords: LexerPhase = (ctx) => {
   let emitted: string[] = [];
 
   return compose<TokenIf>(
-    map(async (tk: TokenIf, _idx, iterable) => {
+    map((tk: TokenIf, _idx, iterable) => {
       const out = typed(tk, iterable as LookaheadIterable<TokenIf>);
 
       emitted = [out.type!, emitted[0]];

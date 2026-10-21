@@ -8,7 +8,7 @@ import { writtenText } from '../utils/written.ts';
 
 export class Lexer implements LexerIf {
   private tokenizer: Tokenizer;
-  private tokens?: AsyncIterable<TokenIf>;
+  private tokens?: Iterable<TokenIf>;
   private insertLOC: boolean;
   /** The here-documents of the input being parsed, in order; the delimiters' `heredoc` indexes into it. */
   public hereDocuments: HereDocument[] = [];
@@ -57,9 +57,9 @@ export class Lexer implements LexerIf {
     this.tokens = this.tokenizer(source);
   }
 
-  async lex() {
-    const iterator = this.tokens![Symbol.asyncIterator]();
-    const item = await iterator.next();
+  lex() {
+    const iterator = this.tokens![Symbol.iterator]();
+    const item = iterator.next();
 
     // Asked again past the end — a `case` left open makes the parser look once
     // more for what could follow it — it is still the end

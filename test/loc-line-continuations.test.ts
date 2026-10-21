@@ -2,9 +2,9 @@ import utils from './_utils.ts';
 import bashParser from '../src/parse.ts';
 
 Deno.test('loc-line-continuations', async (t) => {
-  await t.step('empty line after line continuation', async () => {
+  await t.step('empty line after line continuation', () => {
     const cmd = `echo \\\n\n\necho there`;
-    const result = await bashParser(cmd);
+    const result = bashParser(cmd);
 
     const expected = {
       type: 'Script',
@@ -34,9 +34,9 @@ Deno.test('loc-line-continuations', async (t) => {
     utils.checkResults(result, expected);
   });
 
-  await t.step('loc take into account line continuations', async () => {
+  await t.step('loc take into account line continuations', () => {
     const cmd = 'echo \\\nworld';
-    const result = await bashParser(cmd, { insertLOC: true });
+    const result = bashParser(cmd, { insertLOC: true });
 
     const expected = {
       type: 'Script',

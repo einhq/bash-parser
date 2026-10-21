@@ -2,8 +2,8 @@ import bashParser from '../src/parse.ts';
 import utils from './_utils.ts';
 
 Deno.test('string replace parameter expansion', async (t) => {
-  await t.step('global string replace ${var//pattern/replacement}', async () => {
-    const result = await bashParser('echo ${var//foo/bar}');
+  await t.step('global string replace ${var//pattern/replacement}', () => {
+    const result = bashParser('echo ${var//foo/bar}');
 
     utils.checkResults((result as any).commands[0].suffix, [{
       type: 'Word',
@@ -19,8 +19,8 @@ Deno.test('string replace parameter expansion', async (t) => {
     }]);
   });
 
-  await t.step('single string replace ${var/pattern/replacement}', async () => {
-    const result = await bashParser('echo ${var/foo/bar}');
+  await t.step('single string replace ${var/pattern/replacement}', () => {
+    const result = bashParser('echo ${var/foo/bar}');
 
     utils.checkResults((result as any).commands[0].suffix, [{
       type: 'Word',
@@ -36,8 +36,8 @@ Deno.test('string replace parameter expansion', async (t) => {
     }]);
   });
 
-  await t.step('global replace with empty replacement ${var// /}', async () => {
-    const result = await bashParser('echo ${var// /}');
+  await t.step('global replace with empty replacement ${var// /}', () => {
+    const result = bashParser('echo ${var// /}');
 
     utils.checkResults((result as any).commands[0].suffix, [{
       type: 'Word',
@@ -53,8 +53,8 @@ Deno.test('string replace parameter expansion', async (t) => {
     }]);
   });
 
-  await t.step('replace with multi-char pattern ${var//abc/xyz}', async () => {
-    const result = await bashParser('echo ${var//abc/xyz}');
+  await t.step('replace with multi-char pattern ${var//abc/xyz}', () => {
+    const result = bashParser('echo ${var//abc/xyz}');
 
     utils.checkResults((result as any).commands[0].suffix, [{
       type: 'Word',
@@ -68,8 +68,8 @@ Deno.test('string replace parameter expansion', async (t) => {
     }]);
   });
 
-  await t.step('an escaped / belongs to the pattern', async () => {
-    const result = await bashParser('echo ${var//\\//^}');
+  await t.step('an escaped / belongs to the pattern', () => {
+    const result = bashParser('echo ${var//\\//^}');
 
     utils.checkResults((result as any).commands[0].suffix, [{
       type: 'Word',
@@ -85,8 +85,8 @@ Deno.test('string replace parameter expansion', async (t) => {
     }]);
   });
 
-  await t.step('# and % anchor the pattern; without a second / there is no replacement', async () => {
-    const anchored = await bashParser('echo ${var/#ab/X} ${var/%c}');
+  await t.step('# and % anchor the pattern; without a second / there is no replacement', () => {
+    const anchored = bashParser('echo ${var/#ab/X} ${var/%c}');
     const [start, end] = (anchored as any).commands[0].suffix;
 
     utils.checkResults(start.expansion, [{ op: 'stringReplace', anchor: '#', substitute: 'ab', replace: 'X', globally: false }]);
@@ -94,8 +94,8 @@ Deno.test('string replace parameter expansion', async (t) => {
     if (end.expansion[0].replace !== undefined) throw new Error('a pattern alone has no replacement');
   });
 
-  await t.step('in assignment context', async () => {
-    const result = await bashParser('x="${year// /}"');
+  await t.step('in assignment context', () => {
+    const result = bashParser('x="${year// /}"');
 
     utils.checkResults((result as any).commands[0].prefix, [{
       type: 'AssignmentWord',
@@ -113,8 +113,8 @@ Deno.test('string replace parameter expansion', async (t) => {
 });
 
 Deno.test('nested parameter expansions with braces', async (t) => {
-  await t.step('${a:-${b}}', async () => {
-    const result = await bashParser('echo ${a:-${b}}');
+  await t.step('${a:-${b}}', () => {
+    const result = bashParser('echo ${a:-${b}}');
 
     utils.checkResults((result as any).commands[0].suffix, [{
       type: 'Word',
@@ -135,8 +135,8 @@ Deno.test('nested parameter expansions with braces', async (t) => {
     }]);
   });
 
-  await t.step('${a:-${b:-${c:-$d}}}', async () => {
-    const result = await bashParser('echo ${a:-${b:-${c:-$d}}}');
+  await t.step('${a:-${b:-${c:-$d}}}', () => {
+    const result = bashParser('echo ${a:-${b:-${c:-$d}}}');
 
     utils.checkResults((result as any).commands[0].suffix, [{
       type: 'Word',
@@ -149,8 +149,8 @@ Deno.test('nested parameter expansions with braces', async (t) => {
     }]);
   });
 
-  await t.step('${a:-${b}} in assignment', async () => {
-    const result = await bashParser('x="${a:-${b}}"');
+  await t.step('${a:-${b}} in assignment', () => {
+    const result = bashParser('x="${a:-${b}}"');
 
     utils.checkResults((result as any).commands[0].prefix, [{
       type: 'AssignmentWord',

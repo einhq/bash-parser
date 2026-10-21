@@ -5,7 +5,7 @@ export interface LexerIf {
   yytext?: any;
   yylineno: number;
   setInput(source: string): void;
-  lex(): Promise<string | undefined>;
+  lex(): string | undefined;
 }
 
 export interface ParserIf {

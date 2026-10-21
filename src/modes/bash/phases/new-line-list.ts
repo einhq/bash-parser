@@ -5,7 +5,7 @@ import lookahead, { type LookaheadIterable } from '../../../utils/iterable/looka
 import map from '../../../utils/iterable/map.ts';
 
 const SkipRepeatedNewLines = {
-  async NEWLINE(tk: TokenIf, iterable?: AsyncIterable<TokenIf>) {
+  NEWLINE(tk: TokenIf, iterable?: Iterable<TokenIf>) {
     const it = iterable as LookaheadIterable<TokenIf>;
     const lastToken = it.behind(1) || mkToken('EMPTY');
 

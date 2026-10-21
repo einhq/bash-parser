@@ -2,12 +2,12 @@ import bashParser from '../src/parse.ts';
 import utils from './_utils.ts';
 
 Deno.test('loc-for', async (t) => {
-  await t.step('loc in for statement', async () => {
+  await t.step('loc in for statement', () => {
     const cmd = `for x in a b c; do
  echo $x;
 done
 `;
-    const result = await bashParser(cmd, { insertLOC: true });
+    const result = bashParser(cmd, { insertLOC: true });
     const expected = {
       type: 'For',
       name: {
@@ -169,12 +169,12 @@ done
     utils.checkResults(result.commands[0], expected);
   });
 
-  await t.step('loc in default for statement', async () => {
+  await t.step('loc in default for statement', () => {
     const cmd = `for x do
  echo $x;
 done
 `;
-    const result = await bashParser(cmd, { insertLOC: true });
+    const result = bashParser(cmd, { insertLOC: true });
     const expected = {
       type: 'For',
       name: {

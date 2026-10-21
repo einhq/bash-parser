@@ -1,11 +1,11 @@
 import is from '../../utils/iterable/is.ts';
 
-export interface LookaheadIterable<T> extends AsyncIterable<T> {
+export interface LookaheadIterable<T> extends Iterable<T> {
   ahead(idx: number): T | undefined;
   behind(idx: number): T | undefined;
 }
 
-const lookahead = <T>(it: AsyncIterable<T>, size: number = 1): LookaheadIterable<T> => {
+const lookahead = <T>(it: Iterable<T>, size: number = 1): LookaheadIterable<T> => {
   if (size < 1) {
     throw new RangeError('size argument must be greater than 0');
   }
@@ -17,7 +17,7 @@ const lookahead = <T>(it: AsyncIterable<T>, size: number = 1): LookaheadIterable
   const behindCache: (T | undefined)[] = new Array(size + 1);
   const aheadCache: T[] = [];
 
-  const iterator = it[Symbol.asyncIterator]();
+  const iterator = it[Symbol.iterator]();
 
   const resultIterable: LookaheadIterable<T> = {
     ahead(idx: number): T | undefined {
@@ -42,14 +42,14 @@ const lookahead = <T>(it: AsyncIterable<T>, size: number = 1): LookaheadIterable
 
       return behindCache[idx];
     },
-    [Symbol.asyncIterator]() {
+    [Symbol.iterator]() {
       return {
-        async next(): Promise<IteratorResult<T>> {
-          let item = await iterator.next();
+        next(): IteratorResult<T> {
+          let item = iterator.next();
 
           while (!item.done && aheadCache.length <= size) {
             aheadCache.push(item.value);
-            item = await iterator.next();
+            item = iterator.next();
           }
 
           if (!item.done) {
@@ -74,6 +74,6 @@ const lookahead = <T>(it: AsyncIterable<T>, size: number = 1): LookaheadIterable
   return resultIterable;
 };
 
-lookahead.depth = (size: number) => <T>(iterable: AsyncIterable<T>): LookaheadIterable<T> => lookahead(iterable, size);
+lookahead.depth = (size: number) => <T>(iterable: Iterable<T>): LookaheadIterable<T> => lookahead(iterable, size);
 
 export default lookahead;

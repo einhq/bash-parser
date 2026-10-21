@@ -6,29 +6,36 @@ import type { Expansion, TokenIf } from '../../../tokenizer/mod.ts';
 import deepCopy from '../../../utils/deep-copy.ts';
 import map from '../../../utils/iterable/map.ts';
 
-const handleParameter = async (obj: ParameterOp, match: RegExpMatchArray) => {
+/** The word an operator takes, parsed; undefined when it is no word on its own. */
+const parseWord = (source: string) => {
+  try {
+    return bashParser(source, { mode: 'word-expansion' });
+  } catch {
+    return undefined;
+  }
+};
+
+const handleParameter = (obj: ParameterOp, match: RegExpMatchArray): ParameterOp => {
   const ret = Object.fromEntries(
-    await Promise.all(
-      Object.entries(obj).map(async ([k, v]) => {
-        if (typeof v === 'function') {
-          const val = v(match);
-          return [k, val];
-        }
+    Object.entries(obj).map(([k, v]) => {
+      if (typeof v === 'function') {
+        const val = v(match);
+        return [k, val];
+      }
 
-        if (typeof v === 'object' && k !== 'expand') {
-          // TODO: This as seems funky
-          return [k, await handleParameter(v as unknown as ParameterOp, match)];
-        }
+      if (typeof v === 'object' && k !== 'expand') {
+        // TODO: This as seems funky
+        return [k, handleParameter(v as unknown as ParameterOp, match)];
+      }
 
-        return [k, v];
-      }),
-    ),
+      return [k, v];
+    }),
   ) as ParameterOp;
 
   if (ret.expand) {
     for (const prop of ret.expand as string[]) {
       const source = (ret[prop] ?? '') as string;
-      const ast = await bashParser(source, { mode: 'word-expansion' }).catch(() => undefined);
+      const ast = parseWord(source);
 
       // An empty word parses to no command at all — `${x:-}` and `${x:?}` are
       // written that way on purpose, so the word is simply absent rather than
@@ -51,7 +58,7 @@ const handleParameter = async (obj: ParameterOp, match: RegExpMatchArray) => {
 /** Stands for `#` while the operators are matched: an identifier no script writes. */
 const POUND = '__bash_parser_pound__';
 
-const expandParameter = async (xp: Expansion, enums: Enums): Promise<Expansion> => {
+const expandParameter = (xp: Expansion, enums: Enums): Expansion => {
   let parameter = xp.parameter!;
   // `${#-x}`, `${#:-x}`, `${#%2}` are $# with an operator; `${#x}`, `${#-}`,
   // `${##}` alone are a length, as bash reads them
@@ -68,7 +75,7 @@ const expandParameter = async (xp: Expansion, enums: Enums): Promise<Expansion> 
     const match = parameter.match(re);
 
     if (match) {
-      const opProps = await handleParameter(pair[1], match);
+      const opProps = handleParameter(pair[1], match);
 
       if (pound && opProps.parameter === POUND) opProps.parameter = '#';
 
@@ -90,22 +97,20 @@ const expandParameter = async (xp: Expansion, enums: Enums): Promise<Expansion> 
  * '$' or "${", "$(" * or '`', and "$((", respectively.
  */
 const parameterExpansion: LexerPhase = (ctx) =>
-  map(async (token: TokenIf) => {
+  map((token: TokenIf) => {
     if (token.is('WORD') || token.is('ASSIGNMENT_WORD')) {
       if (!token.expansion || token.expansion.length === 0) {
         return token;
       }
 
       return token.setExpansion(
-        await Promise.all(
-          token.expansion!.map(async (xp: Expansion) => {
-            if (xp.type === 'ParameterExpansion') {
-              return await expandParameter(xp, ctx.enums);
-            }
+        token.expansion!.map((xp: Expansion) => {
+          if (xp.type === 'ParameterExpansion') {
+            return expandParameter(xp, ctx.enums);
+          }
 
-            return xp;
-          }),
-        ),
+          return xp;
+        }),
       );
     }
     return token;

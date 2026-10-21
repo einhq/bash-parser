@@ -5,11 +5,11 @@ import rules from '../src/modes/bash/phases/mod.ts';
 import { mkToken, type TokenIf } from '../src/tokenizer/mod.ts';
 import { fromArray } from './_utils.ts';
 
-const check = async (rule: LexerPhase, actual: TokenIf[], expected: TokenIf[]) => {
+const check = (rule: LexerPhase, actual: TokenIf[], expected: TokenIf[]) => {
   const result = [];
   const it = rule({ enums } as LexerContext)(fromArray(actual));
 
-  for await (const tk of it) {
+  for (const tk of it) {
     result.push(tk);
   }
 
@@ -22,12 +22,12 @@ const check = async (rule: LexerPhase, actual: TokenIf[], expected: TokenIf[]) =
 };
 
 Deno.test('tokenization-rules', async (t) => {
-  await t.step('operatorTokens - identify operator with their tokens', async () => {
-    await check(rules.operatorTokens, [mkToken('OPERATOR', '<<')], [mkToken('DLESS', '<<')]);
+  await t.step('operatorTokens - identify operator with their tokens', () => {
+    check(rules.operatorTokens, [mkToken('OPERATOR', '<<')], [mkToken('DLESS', '<<')]);
   });
 
-  await t.step('reservedWords - identify reserved words or WORD', async () => {
-    await check(
+  await t.step('reservedWords - identify reserved words or WORD', () => {
+    check(
       rules.reservedWords,
       [
         mkToken('TOKEN', 'while'),
@@ -40,7 +40,7 @@ Deno.test('tokenization-rules', async (t) => {
     );
   });
 
-  await t.step('functionName - replace function name token as NAME', async () => {
+  await t.step('functionName - replace function name token as NAME', () => {
     const input = [
       mkToken('WORD', 'test', {
         ctx: { maybeStartOfSimpleCommand: true },
@@ -55,7 +55,7 @@ Deno.test('tokenization-rules', async (t) => {
       mkToken('Rbrace', '}'),
     ];
 
-    await check(rules.functionName, input, [
+    check(rules.functionName, input, [
       mkToken('NAME', 'test', {
         ctx: { maybeStartOfSimpleCommand: true },
       }),

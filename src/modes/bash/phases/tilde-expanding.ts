@@ -64,7 +64,7 @@ const tildePrefixes = (text: string, assignment: boolean, taken: { start: number
 };
 
 const tildeExpanding: LexerPhase = (ctx) =>
-  map(async (token: TokenIf) => {
+  map((token: TokenIf) => {
     const resolvers = ctx.resolvers as typeof ctx.resolvers & { posix?: boolean };
 
     if (resolvers.deferTildeExpansion && (token.is('WORD') || token.is('ASSIGNMENT_WORD')) && token.value?.includes('~')) {

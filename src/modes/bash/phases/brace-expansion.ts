@@ -45,10 +45,10 @@ const REDIRECTIONS = ['LESS', 'GREAT', 'DGREAT', 'LESSAND', 'GREATAND', 'LESSGRE
  * the elements of an array literal: `a=({1..3})`.
  */
 const braceExpansion: LexerPhase = () =>
-  async function* (tokens: AsyncIterable<TokenIf>) {
+  function* (tokens: Iterable<TokenIf>) {
     let previous: TokenIf | undefined;
 
-    for await (const token of tokens) {
+    for (const token of tokens) {
       const redirected = previous !== undefined && REDIRECTIONS.some((type) => previous!.is(type));
 
       previous = token;

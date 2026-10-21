@@ -2,8 +2,8 @@ import bashParser from '../src/parse.ts';
 import utils from './_utils.ts';
 
 Deno.test('reserved words', async (t) => {
-  await t.step('single quoted tokens are not parsed as reserved words', async () => {
-    const result = await bashParser("'if' true");
+  await t.step('single quoted tokens are not parsed as reserved words', () => {
+    const result = bashParser("'if' true");
 
     utils.checkResults(result, {
       type: 'Script',
@@ -25,8 +25,8 @@ Deno.test('reserved words', async (t) => {
     });
   });
 
-  await t.step('double quoted tokens are not parsed as reserved words', async () => {
-    const result = await bashParser('"if" true');
+  await t.step('double quoted tokens are not parsed as reserved words', () => {
+    const result = bashParser('"if" true');
 
     utils.checkResults(result, {
       type: 'Script',
@@ -48,8 +48,8 @@ Deno.test('reserved words', async (t) => {
     });
   });
 
-  await t.step('partially double quoted tokens are not parsed as reserved words', async () => {
-    const result = await bashParser('i"f" true');
+  await t.step('partially double quoted tokens are not parsed as reserved words', () => {
+    const result = bashParser('i"f" true');
 
     utils.checkResults(result, {
       type: 'Script',
@@ -71,8 +71,8 @@ Deno.test('reserved words', async (t) => {
     });
   });
 
-  await t.step('partially single quoted tokens are not parsed as reserved words', async () => {
-    const result = await bashParser("i'f' true");
+  await t.step('partially single quoted tokens are not parsed as reserved words', () => {
+    const result = bashParser("i'f' true");
 
     utils.checkResults(result, {
       type: 'Script',
@@ -94,8 +94,8 @@ Deno.test('reserved words', async (t) => {
     });
   });
 
-  await t.step('tokens in invalid positions are not parsed as reserved words', async () => {
-    const result = await bashParser('echo if');
+  await t.step('tokens in invalid positions are not parsed as reserved words', () => {
+    const result = bashParser('echo if');
 
     utils.checkResults(result, {
       type: 'Script',

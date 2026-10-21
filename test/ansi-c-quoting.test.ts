@@ -6,8 +6,8 @@ import { unquoteAssignmentWithProtectedRanges } from '../src/utils/unquote-with-
 /** Quote removal as the parser runs it */
 const unquote = (text: string) => unquoteWord(text).values;
 
-const words = async (source: string) => {
-  const ast = await parse(source);
+const words = (source: string) => {
+  const ast = parse(source);
   const command = ast.commands[0] as { suffix?: { text: string }[] };
 
   return command.suffix?.map((word) => word.text);
@@ -42,9 +42,9 @@ Deno.test("ANSI-C quoting $'…'", async (t) => {
     assertEquals(unquote("$'it\\'s'"), ["it's"]);
   });
 
-  await t.step('the decoded text is quoted, so blanks do not split the word', async () => {
+  await t.step('the decoded text is quoted, so blanks do not split the word', () => {
     assertEquals(unquote("$'a b'"), ['a b']);
-    assertEquals(await words("echo $'a b'"), ['a b']);
+    assertEquals(words("echo $'a b'"), ['a b']);
   });
 
   await t.step('it joins with the rest of the word', () => {
@@ -55,7 +55,7 @@ Deno.test("ANSI-C quoting $'…'", async (t) => {
     assertEquals(unquote(`"$'ab'"`), ["$'ab'"]);
   });
 
-  await t.step('a newline inside it survives into one word', async () => {
-    assertEquals(await words("echo $'a\\nb' c"), ['a\nb', 'c']);
+  await t.step('a newline inside it survives into one word', () => {
+    assertEquals(words("echo $'a\\nb' c"), ['a\nb', 'c']);
   });
 });
