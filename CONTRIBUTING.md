@@ -22,7 +22,7 @@ Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) to understand the expect
 
 ### Reporting Bugs
 
-If you find a bug, please open an issue on the [GitHub repository](https://github.com/mattiasrunge/bash-parser/issues) and include:
+If you find a bug, please open an issue on the [GitHub repository](https://github.com/einhq/bash-parser/issues) and include:
 
 - A clear and descriptive title.
 - A detailed description of the problem.
@@ -31,7 +31,7 @@ If you find a bug, please open an issue on the [GitHub repository](https://githu
 
 ### Suggesting Enhancements
 
-If you have an idea for an enhancement, please open an issue on the [GitHub repository](https://github.com/mattiasrunge/bash-parser/issues) and include:
+If you have an idea for an enhancement, please open an issue on the [GitHub repository](https://github.com/einhq/bash-parser/issues) and include:
 
 - A clear and descriptive title.
 - A detailed description of the enhancement.
@@ -44,7 +44,7 @@ If you have an idea for an enhancement, please open an issue on the [GitHub repo
 3. Make your changes.
 4. Commit your changes (`git commit -m 'Add some feature'`).
 5. Push to the branch (`git push origin feature/your-feature-name`).
-6. Open a pull request on the [GitHub repository](https://github.com/mattiasrunge/bash-parser/pulls).
+6. Open a pull request on the [GitHub repository](https://github.com/einhq/bash-parser/pulls).
 
 Please ensure your pull request adheres to the following guidelines:
 
@@ -59,7 +59,7 @@ To set up your development environment, follow these steps:
 1. Clone the repository:
 
 ```sh
-git clone https://github.com/mattiasrunge/bash-parser.git
+git clone https://github.com/einhq/bash-parser.git
 cd bash-parser
 ```
 

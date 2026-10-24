@@ -107,9 +107,9 @@ try {
 ## Bash conformance
 
 The parser is tested against GNU bash 5.2's own test suite, together with
-[bash-executor](https://github.com/mattiasrunge/bash-executor), which runs what it parses. Its
-[conformance report](https://github.com/mattiasrunge/bash-executor/blob/master/conformance/REPORT.md) is the current state,
-and [the conformance README](https://github.com/mattiasrunge/bash-executor/blob/master/conformance/README.md) explains how
+[bash-executor](https://github.com/einhq/bash-executor), which runs what it parses. Its
+[conformance report](https://github.com/einhq/bash-executor/blob/master/conformance/REPORT.md) is the current state,
+and [the conformance README](https://github.com/einhq/bash-executor/blob/master/conformance/README.md) explains how
 it is measured.
 
 462 of the suite's 471 test files parse. The other nine hold deliberate syntax errors, which bash reports and then
@@ -149,4 +149,4 @@ This project is licensed under the MIT License. See the [`LICENSE`](./LICENCE) f
 
 ## Contact
 
-For questions or support, please open an issue on the [GitHub repository](https://github.com/mattiasrunge/bash-parser/issues).
+For questions or support, please open an issue on the [GitHub repository](https://github.com/einhq/bash-parser/issues).

@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "exports": "./mod.ts",
   "description": "Bash parser - parse bash scripts into an AST",
-  "repository": "https://github.com/mattiasrunge/bash-parser",
+  "repository": "https://github.com/einhq/bash-parser",
   "license": "MIT",
   "author": "Mattias Runge-Broberg <mattias@runge.se>",
   "type": "module",
