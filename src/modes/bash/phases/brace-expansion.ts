@@ -2,7 +2,7 @@ import type { LexerPhase } from '../../../lexer/types.ts';
 import type { TokenIf } from '../../../tokenizer/mod.ts';
 import { ARRAY_ELEMENT_SEPARATOR, parseAssignmentWord } from '../../../utils/assignment.ts';
 import type { Expansion } from '../../../tokenizer/mod.ts';
-import { braceExpand, braceExpandMapped } from '../../../utils/brace-expansion.ts';
+import { braceExpand, braceExpandMapped, withinLimits } from '../../../utils/brace-expansion.ts';
 
 /**
  * A word's expansions, moved to where their text went in one of the words
@@ -42,11 +42,19 @@ const REDIRECTIONS = ['LESS', 'GREAT', 'DGREAT', 'LESSAND', 'GREATAND', 'LESSGRE
  * `{1..3}` in it becomes the words it stands for, each read on from here as
  * any word is. A pattern — a `case` label, the right side of `[[ == ]]` — and
  * a redirection's file are left as written, and so is an assignment, but for
- * the elements of an array literal: `a=({1..3})`.
+ * the elements of an array literal: `a=({1..3})`. The words made in one parse
+ * are held to the bounds one word's are (`withinLimits`).
  */
 const braceExpansion: LexerPhase = () =>
   function* (tokens: Iterable<TokenIf>) {
     let previous: TokenIf | undefined;
+    let madeWords = 0;
+    let madeChars = 0;
+    const made = (words: string[]) => {
+      madeWords += words.length;
+      madeChars += words.reduce((total, word) => total + word.length, 0);
+      withinLimits(madeWords, madeChars);
+    };
 
     for (const token of tokens) {
       const redirected = previous !== undefined && REDIRECTIONS.some((type) => previous!.is(type));
@@ -57,6 +65,8 @@ const braceExpansion: LexerPhase = () =>
         const words = braceExpandMapped(token.value!);
 
         if (words.length !== 1 || words[0].text !== token.value) {
+          made(words.map((word) => word.text));
+
           for (const word of words) {
             yield token.setValue(word.text).setExpansion(moveExpansions(token.expansion, word.map, token.value!, word.text));
           }
@@ -70,6 +80,7 @@ const braceExpansion: LexerPhase = () =>
 
         if (parts?.list) {
           const elements = parts.value.split(ARRAY_ELEMENT_SEPARATOR).flatMap((element) => (element === '' ? [element] : braceExpand(element)));
+          made(elements);
 
           yield token.setValue(`${token.value!.slice(0, parts.valueStart)}${elements.join(ARRAY_ELEMENT_SEPARATOR)})`);
           continue;

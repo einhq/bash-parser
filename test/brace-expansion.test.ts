@@ -1,6 +1,6 @@
-import { assertEquals } from '@std/assert';
+import { assertEquals, assertThrows } from '@std/assert';
 import bashParser from '../src/parse.ts';
-import { braceExpand } from '../src/utils/brace-expansion.ts';
+import { braceExpand, MAX_BRACE_WORDS } from '../src/utils/brace-expansion.ts';
 
 // Each case is what bash gives
 Deno.test('brace expansion', async (t) => {
@@ -16,6 +16,20 @@ Deno.test('brace expansion', async (t) => {
     assertEquals(braceExpand('{-2..2}'), ['-2', '-1', '0', '1', '2']);
     assertEquals(braceExpand('{z..v..2}'), ['z', 'x', 'v']);
     assertEquals(braceExpand('{9223372036854775806..9223372036854775807}'), ['9223372036854775806', '9223372036854775807']);
+  });
+
+  await t.step('a word that would expand past the limit is an error, made of nothing', () => {
+    assertEquals(braceExpand(`{1..${MAX_BRACE_WORDS}}`).length, MAX_BRACE_WORDS);
+    for (const word of [`{1..${MAX_BRACE_WORDS + 1}}`, '{1..99999999999999}', '{1..1000}{1..1000}', '{a,b}'.repeat(17), `{1..10000}${'x'.repeat(1000)}`]) {
+      const started = performance.now();
+      assertThrows(() => braceExpand(word), Error, 'brace expansion: ');
+      assertEquals(performance.now() - started < 1000, true, word.slice(0, 40));
+    }
+    assertThrows(() => bashParser('echo {1..1000}{1..1000}{1..1000}'), SyntaxError, 'brace expansion: ');
+    // Words each within it, together past it
+    assertThrows(() => bashParser(`echo${' {1..60000}'.repeat(2)}`), SyntaxError, 'brace expansion: ');
+    assertThrows(() => bashParser(`a=({1..60000} {1..60000})`), SyntaxError, 'brace expansion: ');
+    assertEquals(((bashParser(`echo {1..50000} {1..50000}`)).commands[0] as any).suffix.length, 100_000);
   });
 
   await t.step('nothing to expand stays as written', () => {

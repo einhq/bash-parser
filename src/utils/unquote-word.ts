@@ -18,10 +18,10 @@ export type UnquoteOptions = {
   comments?: boolean;
 };
 
-const RE_META = '|&;()<> \\t';
-const RE_BAREWORD = `(\\\\['"${RE_META}']|[^\\s'"${RE_META}'])+`;
-const RE_SINGLE_QUOTE = '"((\\\\"|[^"])*?)"';
-const RE_DOUBLE_QUOTE = "'((\\\\'|[^'])*?)'";
+/** The characters that end a word unquoted, and that a backslash keeps in it */
+const META = '|&;()<> \t';
+const ESCAPABLE = `'"${META}`;
+const WHITESPACE = /\s/;
 const SINGLE_QUOTE = "'";
 const DOUBLE_QUOTE = '"';
 const BACKSLASH = '\\';
@@ -206,14 +206,64 @@ const parseChunk = (chunks: string[], idx: number, comments = true): SingleParse
   return result;
 };
 
+/**
+ * Where the quote at `open` closes, a backslash keeping that quote inside, or -1
+ * when it does not. With no other, the last quote a backslash kept closes it:
+ * `'a\'` is `a\` quoted, as bash has it.
+ */
+const closingQuote = (s: string, open: number): number => {
+  const quote = s[open];
+  let kept = -1;
+
+  for (let i = open + 1; i < s.length; i++) {
+    if (s[i] === quote) return i;
+    if (s[i] === BACKSLASH && s[i + 1] === quote) kept = ++i;
+  }
+
+  return kept;
+};
+
+/**
+ * The words of a command line, quotes still in them: runs of characters that are
+ * neither blank nor a metacharacter, a backslash keeping a quote, blank or
+ * metacharacter in, and quoted strings. A quote that never closes is dropped, and
+ * the word goes on after it. One pass, as a regex's backtracking runs out of stack
+ * on a word of millions of characters.
+ */
+const chunksOf = (s: string): string[] => {
+  const chunks: string[] = [];
+  let i = 0;
+
+  while (i < s.length) {
+    const start = i;
+
+    while (i < s.length) {
+      const c = s[i];
+
+      if (c === BACKSLASH && i + 1 < s.length && ESCAPABLE.includes(s[i + 1])) {
+        i += 2;
+      } else if (c === DOUBLE_QUOTE || c === SINGLE_QUOTE) {
+        const close = closingQuote(s, i);
+
+        if (close === -1) break;
+        i = close + 1;
+      } else if (WHITESPACE.test(c) || META.includes(c)) {
+        break;
+      } else {
+        i++;
+      }
+    }
+
+    if (i > start) chunks.push(s.slice(start, i));
+    else i++;
+  }
+
+  return chunks;
+};
+
 const unquoteWord = (s: string, options: UnquoteOptions = {}): ParseResult => {
   const comments = options.comments ?? true;
-  const chunker = new RegExp(
-    '(' + RE_BAREWORD + '|' + RE_SINGLE_QUOTE + '|' + RE_DOUBLE_QUOTE + ')*',
-    'g',
-  );
-
-  const chunks = (s.match(chunker) || []).filter(Boolean);
+  const chunks = chunksOf(s);
   const result: ParseResult = { values: [] };
 
   for (let i = 0; i < chunks.length; i++) {

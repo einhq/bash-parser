@@ -40,6 +40,8 @@ This project is a fork of the original [bash-parser](https://github.com/vorpaljs
 - Arithmetic expressions parsed into their own AST (`parseArithmetic`)
 - Aliases expanded where bash expands them, through a resolver
 - Syntax errors as bash reports them: the unexpected token, an unexpected end of file, or the quote that never closed
+- Brace expansion is bounded where bash's is not: a parse that would make more than 100 000 words, or 10 000 000
+  characters, is an error (`brace expansion: …`), found before any of it is made
 
 ## Installation
 

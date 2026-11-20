@@ -4,7 +4,35 @@
  * zeros. It is the first expansion and works on the word as written: a brace
  * or a comma that is quoted, escaped or inside `${ }`, `$( )`, `$(( ))` or
  * backquotes does not count, and a brace with nothing to expand stays as it is.
+ *
+ * What one word expands to is bounded: past `MAX_BRACE_WORDS` words or
+ * `MAX_BRACE_CHARS` characters the word is an error, found from the parts'
+ * sizes before any of it is made, where bash would try and run out of memory.
+ * The parser holds all the words of one parse to the same bounds.
  */
+
+/** The most words one word, or one parse, expands to */
+export const MAX_BRACE_WORDS = 100_000;
+
+/** The most characters, all its words together, one word, or one parse, expands to */
+export const MAX_BRACE_CHARS = 10_000_000;
+
+/** A word whose brace expansion would pass `MAX_BRACE_WORDS` or `MAX_BRACE_CHARS`. */
+export class BraceExpansionLimitError extends Error {
+  constructor(what: string) {
+    super(`brace expansion: ${what}`);
+  }
+}
+
+/** Throw when `words` words of `chars` characters in all are more than one word may expand to. */
+export function withinLimits(words: number | bigint, chars: number | bigint): void {
+  if (BigInt(words) > BigInt(MAX_BRACE_WORDS)) {
+    throw new BraceExpansionLimitError(`${words} words, more than the ${MAX_BRACE_WORDS} a word may expand to`);
+  }
+  if (BigInt(chars) > BigInt(MAX_BRACE_CHARS)) {
+    throw new BraceExpansionLimitError(`${chars} characters, more than the ${MAX_BRACE_CHARS} a word may expand to`);
+  }
+}
 
 /** Where the construct starting at `text[i]` ends: past a quote, an escape or an expansion. */
 function skip(text: string, i: number): number {
@@ -104,6 +132,10 @@ function sequence(body: string): string[] | undefined {
     if (step < 0n) step = -step;
     if (step === 0n) step = 1n;
 
+    const count = (start <= end ? end - start : start - end) / step + 1n;
+    const longest = BigInt(Math.max(from.length, to.length));
+    withinLimits(count, count * longest);
+
     // A leading zero on either end pads every number to the longer one's width
     const padded = /^[+-]?0\d/.test(from) || /^[+-]?0\d/.test(to);
     const width = padded ? Math.max(from.length, to.length) : 0;
@@ -113,8 +145,6 @@ function sequence(body: string): string[] | undefined {
       const digits = (n < 0n ? -n : n).toString();
 
       words.push(n < 0n ? `-${digits.padStart(width - 1, '0')}` : digits.padStart(width, '0'));
-
-      if (words.length > 1_000_000) break;
     }
 
     return words;
@@ -191,10 +221,14 @@ export function braceExpandMapped(text: string): { text: string; map: number[] }
 
       // Each alternative may hold braces of its own, and so may what follows
       const tails = expand(postamble);
+      const middles = alternatives.flatMap((alternative) => alternative.some((index) => index < 0) ? [alternative] : expand(alternative));
 
-      return alternatives.flatMap((alternative) =>
-        (alternative.some((index) => index < 0) ? [alternative] : expand(alternative)).flatMap((middle) => tails.map((tail) => [...preamble, ...middle, ...tail]))
-      );
+      // Every middle with every tail, each after the preamble
+      const sum = (parts: number[][]) => parts.reduce((total, part) => total + part.length, 0);
+      const words = middles.length * tails.length;
+      withinLimits(words, words * preamble.length + sum(middles) * tails.length + sum(tails) * middles.length);
+
+      return middles.flatMap((middle) => tails.map((tail) => [...preamble, ...middle, ...tail]));
     }
 
     return [indices];

@@ -2,6 +2,12 @@ import parse from '../src/utils/unquote-word.ts';
 import utils from './_utils.ts';
 
 Deno.test('unquote-word', async (t) => {
+  await t.step('a quote with no other close is closed by the last one a backslash kept', () => {
+    utils.checkResults(parse("x 'a\\' y"), { values: ['x', 'a\\', 'y'] });
+    utils.checkResults(parse("x 'a\\'b' y"), { values: ['x', 'a\\b', 'y'] });
+    utils.checkResults(parse('x "a\\" y'), { values: ['x', 'a"', 'y'] });
+  });
+
   await t.step('comment', () => {
     utils.checkResults(parse('beep#boop'), { values: ['beep'], comment: 'boop' });
     utils.checkResults(parse('beep #boop'), { values: ['beep'], comment: 'boop' });

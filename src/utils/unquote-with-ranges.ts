@@ -330,8 +330,10 @@ const markQuotedNulls = (text: string): string => {
         continue;
       }
 
-      // An empty element of "$@": between the quote and a boundary, or two boundaries
-      const empty = (c === FIELD_MARKER || c === quote) && (out.endsWith(FIELD_MARKER) || (c === FIELD_MARKER && out.endsWith(quote)));
+      // An empty element of "$@": between the quote and a boundary, or two boundaries. The
+      // character before is looked up in `text`, as asking the string being built flattens it
+      const before = text[i - 1];
+      const empty = (c === FIELD_MARKER || c === quote) && (before === FIELD_MARKER || (c === FIELD_MARKER && before === quote));
 
       if (empty) out += QUOTED_NULL;
       if (c === quote) quote = '';
@@ -406,8 +408,9 @@ export const unquoteWordWithProtectedRanges = (text: string, protectedRanges: Pr
     }).join(FIELD_MARKER);
 
     for (const field of splitFields(bounded)) {
-      // A marked boundary splits whatever the quoting was, so it is applied last
-      values.push(...field.split(FIELD_MARKER).map((piece) => restorePlaceholders(piece).replaceAll(QUOTED_NULL, '')));
+      // A marked boundary splits whatever the quoting was, so it is applied last. One at a
+      // time: an array's elements are more than a spread's arguments may be
+      for (const piece of field.split(FIELD_MARKER)) values.push(restorePlaceholders(piece).replaceAll(QUOTED_NULL, ''));
     }
   }
 

@@ -1,4 +1,5 @@
-import { unquoteAssignmentWithProtectedRanges, unquoteWordWithProtectedRanges } from '../src/utils/unquote-with-ranges.ts';
+import { assert, assertEquals } from '@std/assert';
+import { FIELD_MARKER, unquoteAssignmentWithProtectedRanges, unquoteWordWithProtectedRanges } from '../src/utils/unquote-with-ranges.ts';
 import utils from './_utils.ts';
 
 /** A range covering the whole string — what an expansion that filled the word looks like. */
@@ -34,6 +35,20 @@ Deno.test('unquote-with-ranges', async (t) => {
   await t.step('metacharacters in the word do not split it', () => {
     utils.checkResults(unquoteWordWithProtectedRanges('a>b', []), { values: ['a>b'] });
     utils.checkResults(unquoteWordWithProtectedRanges('*.@(c|h)', []), { values: ['*.@(c|h)'] });
+  });
+
+  await t.step('a list of 400 000 fields takes time in proportion to it, and no deeper stack', () => {
+    const words = Array.from({ length: 400_000 }, (_, i) => String(i));
+    const marked = words.join(FIELD_MARKER);
+    const spaced = words.join(' ');
+
+    // "${a[@]}", ${a[@]} and $s holding the words with blanks between
+    for (const [text, ranges] of [[`"${marked}"`, [{ start: 1, end: marked.length + 1 }]], [marked, whole(marked)], [spaced, whole(spaced)]] as const) {
+      const started = performance.now();
+      const { values } = unquoteWordWithProtectedRanges(text, ranges as never);
+      assertEquals([values.length, values[0], values.at(-1)], [400_000, '0', '399999']);
+      assert(performance.now() - started < 10_000, `${performance.now() - started} ms`);
+    }
   });
 
   await t.step('assignment values keep metacharacters and are not split', () => {
