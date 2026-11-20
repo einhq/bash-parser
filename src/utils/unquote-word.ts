@@ -1,3 +1,5 @@
+import { anyOf, nextSpecial } from './runs.ts';
+
 export type ParseResult = {
   values: string[];
   comment?: string;
@@ -132,6 +134,15 @@ const decodeEscapedBytes = (text: string): string =>
     }
   });
 
+/** What `parseChunk` acts on in single quotes, double quotes, and outside them, with and without comments. */
+const SINGLE_QUOTED = anyOf("'");
+const DOUBLE_QUOTED = anyOf('"\\');
+const UNQUOTED = anyOf('$\'"\\');
+const UNQUOTED_WITH_COMMENTS = anyOf('$\'"\\#');
+
+/** What ends a run of a word's own characters in `chunksOf`: a quote, a backslash, a blank or a metacharacter. */
+const WORD_RUN_END = /[\s'"\\|&;()<>]/g;
+
 /**
  * Hand-written scanner/parser for Bash quoting rules:
  *
@@ -155,6 +166,17 @@ const parseChunk = (chunks: string[], idx: number, comments = true): SingleParse
   let isEscaped = false;
 
   for (let i = 0, len = chunk.length; i < len; i++) {
+    // What changes nothing is taken a run at a time
+    if (!isEscaped) {
+      const next = nextSpecial(chunk, i, currentQuote === SINGLE_QUOTE ? SINGLE_QUOTED : currentQuote ? DOUBLE_QUOTED : comments ? UNQUOTED_WITH_COMMENTS : UNQUOTED);
+
+      if (next > i) {
+        result.value += chunk.slice(i, next);
+        i = next;
+        if (i >= len) break;
+      }
+    }
+
     let c = chunk.charAt(i);
 
     if (!isEscaped && !currentQuote && c === '$' && chunk.charAt(i + 1) === "'") {
@@ -238,6 +260,9 @@ const chunksOf = (s: string): string[] => {
     const start = i;
 
     while (i < s.length) {
+      i = nextSpecial(s, i, WORD_RUN_END);
+      if (i >= s.length) break;
+
       const c = s[i];
 
       if (c === BACKSLASH && i + 1 < s.length && ESCAPABLE.includes(s[i + 1])) {

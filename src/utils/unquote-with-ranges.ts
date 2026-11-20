@@ -1,4 +1,5 @@
 import type { ProtectedRange } from '../tokenizer/types.ts';
+import { anyOf, nextSpecial } from './runs.ts';
 import unquoteWord, { parseAnsiC, type ParseResult } from './unquote-word.ts';
 
 // Stand-ins for the quotes and backslashes in protected ranges while the rest is
@@ -27,6 +28,15 @@ const META_PLACEHOLDERS: [string, string][] = [
   ['<', '\x00LT\x00'],
   ['>', '\x00GT\x00'],
 ];
+
+/**
+ * What the scanners below act on, each in its quoting; everything else they take a
+ * run at a time (`nextSpecial`).
+ */
+const UNQUOTED_SPECIAL = anyOf('\'"\\$');
+const SINGLE_QUOTE_END = anyOf("'");
+const DOUBLE_QUOTED_SPECIAL = anyOf('"\\');
+const UNQUOTED_BLANK_OR_QUOTE = anyOf('\\"\' \t\n');
 
 /** The value of IFS a shell starts with: space, tab, newline. */
 export const DEFAULT_IFS = ' \t\n';
@@ -71,8 +81,20 @@ const WHITESPACE = ' \t\n\r\v\f';
  */
 const markFieldSeparators = (content: string, ifs: string): string => {
   let marked = '';
+  const special = anyOf(ifs + WHITESPACE);
 
-  for (const char of content) {
+  for (let i = 0; i < content.length; i++) {
+    // A run of what neither IFS nor whitespace is goes in whole
+    const next = nextSpecial(content, i, special);
+
+    if (next > i) {
+      marked += content.slice(i, next);
+      i = next;
+      if (i >= content.length) break;
+    }
+
+    const char = content[i];
+
     if (ifs.includes(char)) {
       marked += WHITESPACE.includes(char) ? IFS_WHITESPACE_PLACEHOLDER : IFS_DELIMITER_PLACEHOLDER;
     } else if (WHITESPACE.includes(char)) {
@@ -110,6 +132,9 @@ const escapeProtectedContent = (content: string): string => {
  * Restore placeholders to their original characters.
  */
 const restorePlaceholders = (text: string): string => {
+  // Every placeholder holds a NUL: a field without one, most of them, has none to restore
+  if (!text.includes('\x00')) return text;
+
   let restored = text
     .replace(new RegExp(BACKSLASH_PLACEHOLDER, 'g'), '\\')
     .replace(new RegExp(DOUBLE_QUOTE_PLACEHOLDER, 'g'), '"')
@@ -210,14 +235,19 @@ export const splitByIfs = (text: string, ifs: string, whitespace: string = WHITE
     i++;
   }
 
-  while (i < text.length) {
-    const char = text[i];
+  const separator = anyOf(ifs);
 
-    if (!isWhitespace(char) && !isDelimiter(char)) {
-      current += char;
-      i++;
-      continue;
+  while (i < text.length) {
+    // A run of what is no separator goes into the field whole
+    const next = nextSpecial(text, i, separator);
+
+    if (next > i) {
+      current += text.slice(i, next);
+      i = next;
+      if (i >= text.length) break;
     }
+
+    const char = text[i];
 
     // One delimiter is `whitespace* separator? whitespace*`
     let sawDelimiter = isDelimiter(char);
@@ -286,6 +316,15 @@ const protectMetacharacters = (text: string): string => {
   let quote = '';
 
   for (let i = 0; i < escaped.length; i++) {
+    // What changes nothing is taken a run at a time
+    const next = nextSpecial(escaped, i, quote === "'" ? SINGLE_QUOTE_END : quote === '"' ? DOUBLE_QUOTED_SPECIAL : UNQUOTED_BLANK_OR_QUOTE);
+
+    if (next > i) {
+      out += escaped.slice(i, next);
+      i = next;
+      if (i >= escaped.length) break;
+    }
+
     const c = escaped[i];
 
     if (quote === "'") {
@@ -312,6 +351,11 @@ const protectMetacharacters = (text: string): string => {
 /** Stands in an empty pair of quotes until fields are split, so that `${sp}""` keeps an empty field. A noncharacter. */
 const QUOTED_NULL = '\uFDD5';
 
+/** What `markQuotedNulls` acts on in single quotes, double quotes, and outside them. */
+const SINGLE_QUOTED_NULL_SPECIAL = anyOf(`'${FIELD_MARKER}`);
+const DOUBLE_QUOTED_NULL_SPECIAL = anyOf(`"\\${FIELD_MARKER}`);
+const UNQUOTED_NULL_SPECIAL = anyOf('\\"\'');
+
 /**
  * Put QUOTED_NULL inside each empty pair of quotes: `""`, `''`, and `"$e"`
  * once `$e` is gone. Quote removal leaves nothing of them, and field
@@ -322,6 +366,15 @@ const markQuotedNulls = (text: string): string => {
   let quote = '';
 
   for (let i = 0; i < text.length; i++) {
+    // What changes nothing is taken a run at a time
+    const next = nextSpecial(text, i, quote === "'" ? SINGLE_QUOTED_NULL_SPECIAL : quote === '"' ? DOUBLE_QUOTED_NULL_SPECIAL : UNQUOTED_NULL_SPECIAL);
+
+    if (next > i) {
+      out += text.slice(i, next);
+      i = next;
+      if (i >= text.length) break;
+    }
+
     const c = text[i];
 
     if (quote) {
@@ -428,6 +481,18 @@ const removeQuotes = (text: string): string => {
   let isEscaped = false;
 
   for (let i = 0; i < text.length; i++) {
+    // What does not change the quoting is taken a run at a time, in one copy: a value of
+    // millions of characters a character at a time holds the event loop for seconds
+    if (!isEscaped) {
+      const next = nextSpecial(text, i, inSingle ? SINGLE_QUOTE_END : inDouble ? DOUBLE_QUOTED_SPECIAL : UNQUOTED_SPECIAL);
+
+      if (next > i) {
+        result += text.slice(i, next);
+        i = next;
+        if (i >= text.length) break;
+      }
+    }
+
     const c = text[i];
 
     if (isEscaped) {
